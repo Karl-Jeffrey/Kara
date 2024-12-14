@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import IdentityScreen from "./screens/IdentityScreen";  // Add this import
 
 import TabBar from "./components/tabBar/TabBar";
 
@@ -25,6 +26,8 @@ import PressEffect from "./components/UI/PressEffect";
 import { GlobalStyles } from "./constants/Styles";
 import ExploreScreen from "./screens/ExploreScreen";
 import ViewStoryScreen from "./screens/ViewStoryScreen";
+import WelcomeScreen from './screens/WelcomeScreen';  // Import the new screen
+
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -141,11 +144,16 @@ export const SignedInStack = () => {
 export const SignedOutStack = () => (
   <NavigationContainer>
     <Stack.Navigator
-      initialRouteName="LoginScreen"
-      screenOptions={screenOptions}
+      initialRouteName="WelcomeScreen" // Set WelcomeScreen as the initial screen
+      screenOptions={{
+        headerShown: false, // Hide header for these screens
+      }}
     >
+      {/* Correct placement of screens inside Stack.Navigator */}
+      <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="SignupScreen" component={SignupScreen} />
+      <Stack.Screen name="IdentityScreen" component={IdentityScreen} />
     </Stack.Navigator>
   </NavigationContainer>
 );

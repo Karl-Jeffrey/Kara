@@ -3607,10 +3607,15 @@ expo-asset@~10.0.10:
     invariant "^2.2.4"
     md5-file "^3.2.3"
 
-expo-av@~14.0.6:
-  version "14.0.6"
-  resolved "https://registry.npmjs.org/expo-av/-/expo-av-14.0.6.tgz"
-  integrity sha512-8FHKgMYo49C5hhgG0ssRRd454VQ82TuujhMdlz7ScJBihEXa89kWKpfk9bXrvetFtrJoAmYuGxsXCJCygZhxfA==
+expo-av@~14.0.7:
+  version "14.0.7"
+  resolved "https://registry.npmjs.org/expo-av/-/expo-av-14.0.7.tgz"
+  integrity sha512-FvKZxyy+2/qcCmp+e1GTK3s4zH8ZO1RfjpqNxh7ARlS1oH8HPtk1AyZAMo52tHz3yQ3UIqxQ2YbI9CFb4065lA==
+
+expo-blur@^14.0.1:
+  version "14.0.1"
+  resolved "https://registry.npmjs.org/expo-blur/-/expo-blur-14.0.1.tgz"
+  integrity sha512-3Q6jFBLbY8n2vwk28ycUC+eIlVhnlqwkXUKk/Lfaj+SGV3AZMQyrixe7OYwJdUfwqETBrnYYMB6uNrJzOSbG+g==
 
 expo-camera@~15.0.14:
   version "15.0.14"
@@ -6148,6 +6153,11 @@ react-native-tab-view@^3.5.2, "react-native-tab-view@>= 3.0.0":
   integrity sha512-nE5WqjbeEPsWQx4mtz81QGVvgHRhujTNIIZiMCx3Bj6CBFDafbk7XZp9ocmtzXUQaZ4bhtVS43R4FIiR4LboJw==
   dependencies:
     use-latest-callback "^0.1.5"
+
+react-native-video@^6.8.2:
+  version "6.8.2"
+  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.8.2.tgz"
+  integrity sha512-lAf6pa/eqksaQnZ+rx9XWx9HpfNt0xr/XmSXMASynJJ8EqMJTr8gHJe4Wfkebo5W8qAMKRuHYtZs+4Shzl3IIQ==
 
 react-native@*, "react-native@^0.0.0-0 || >=0.60 <1.0", "react-native@>= 0.30.0", react-native@>=0.42.0, react-native@>=0.57, react-native@0.74.3:
   version "0.74.3"
