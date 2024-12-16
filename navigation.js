@@ -96,9 +96,10 @@ export const SignedInStack = () => {
       >
         {/* <Tab.Screen name="HomeTabStack" component={HomeTabStack} /> */}
         <Tab.Screen name="HomeScreen" component={HomeScreen} />
-        <Tab.Screen name="ExploreScreen" component={ExploreScreen} />
         <Tab.Screen name="ReelsScreen" component={ReelsScreen} />
         <Tab.Screen name="MessagesScreen" component={MessagesScreen} />
+        <Tab.Screen name="UserProfileScreen" component={UserProfileScreen} />
+        {/* <Tab.Screen name="ExploreScreen" component={ExploreScreen} /> */}
         {/* <Tab.Screen name="ReelsScreens" component={SearchScreen} /> */}
         {/* <Tab.Screen name="UserProfileScreen" component={UserProfileScreen} /> */}
       </Tab.Navigator>
