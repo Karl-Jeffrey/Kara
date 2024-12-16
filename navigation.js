@@ -27,6 +27,7 @@ import { GlobalStyles } from "./constants/Styles";
 import ExploreScreen from "./screens/ExploreScreen";
 import ViewStoryScreen from "./screens/ViewStoryScreen";
 import WelcomeScreen from './screens/WelcomeScreen';  // Import the new screen
+import ActivitySearchScreen from "./screens/ActivitySearchScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -114,7 +115,7 @@ export const SignedInStack = () => {
             component={BottomTabNavigator}
           />
 
-          <Stack.Screen name="NewPostScreen" component={NewPostScreen} />
+          <Stack.Screen name="ActivitySearchScreen" component={ActivitySearchScreen} />
           <Stack.Screen name="AddStoryScreen" component={AddStoryScreen} />
           <Stack.Screen name="ChatScreen" component={ChatScreen} />
 
