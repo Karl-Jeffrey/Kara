@@ -1,34 +1,34 @@
+import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
   ActivityIndicator,
   Pressable,
   Image,
+  Animated,
 } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { GlobalStyles } from "../../constants/Styles.js";
 import { FlatList } from "react-native-gesture-handler";
 import CollectionCard from "./CollectionCard.js";
- 
-import React, { useState, useEffect, useContext } from "react";
+import MyActivities from "../../screens/MyActivitiesScreen.js";
 import Post from "../../components/userProfileScreen/Post";
 import { AuthContext } from "../../store/auth-context";
 import { Ionicons } from "@expo/vector-icons";
 import { POSTS } from "../../data/posts.js";
- 
+
 const TopTab = createMaterialTopTabNavigator();
- 
+
 function Posts({ navigation, route, refreshing }) {
   const authCtx = useContext(AuthContext);
   const [fetching, setFetching] = useState(true);
   const [errorFetching, setErrorFetching] = useState(false);
   const [posts, setPosts] = useState([]);
+
   const getPosts = async () => {
     try {
       setFetching(true);
- 
       setErrorFetching(false);
       setPosts(POSTS);
     } catch (error) {
@@ -37,15 +37,19 @@ function Posts({ navigation, route, refreshing }) {
     }
     setFetching(false);
   };
+
   useEffect(() => {
     getPosts();
   }, []);
+
   useEffect(() => {
     if (refreshing) {
       console.log("refreshing");
       getPosts();
     }
   }, [refreshing]);
+const scrollY = useRef(new Animated.Value(0)).current;
+
   return (
     <View style={{ flex: 1, backgroundColor: GlobalStyles.colors.primary }}>
       {fetching ? (
@@ -72,7 +76,13 @@ function Posts({ navigation, route, refreshing }) {
           </Pressable>
         </View>
       ) : posts.length > 0 ? (
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+        >
           <View
             style={{
               flexDirection: "row",
@@ -95,7 +105,7 @@ function Posts({ navigation, route, refreshing }) {
               ))}
             </View>
           </View>
-        </ScrollView>
+        </Animated.ScrollView>
       ) : (
         <View
           style={{
@@ -116,7 +126,7 @@ function Posts({ navigation, route, refreshing }) {
     </View>
   );
 }
- 
+
 function Likes() {
   return (
     <View style={{ backgroundColor: GlobalStyles.colors.primary }}>
@@ -127,16 +137,15 @@ function Likes() {
           alignItems: "center",
           paddingBottom: GlobalStyles.styles.tabBarPadding,
         }}
-        keyExtractor={(item) => item.id.toString()} // Use item.id for the key
+        keyExtractor={(item) => item.id.toString()}
         data={[
-          { id: 1, title: "Liked Posts" },
-          { id: 2, title: "Liked Activities" },
+          { id: 1, title: "Favorite Posts" },
+          { id: 2, title: "Favorite Activities" },
         ]}
         numColumns={2}
-        renderItem={({ item }) => { // Use 'item' here to access the data
+        renderItem={({ item }) => {
           return (
             <View>
-              {/* Pass title as prop to CollectionCard */}
               <CollectionCard title={item.title} />
             </View>
           );
@@ -147,6 +156,22 @@ function Likes() {
 }
 
 const ProfileBody = ({ refreshing }) => {
+  // Déclare la valeur animée pour capturer le défilement
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Style de la tabBar avec le défilement
+  const tabBarStyle = {
+    transform: [
+      {
+        translateY: scrollY.interpolate({
+          inputRange: [0, 200],  // Plage de défilement
+          outputRange: [0, -60], // La TabBar se déplace de -60px
+          extrapolate: "clamp",  // Ne dépasse pas les limites
+        }),
+      },
+    ],
+  };
+
   return (
     <TopTab.Navigator
       screenOptions={{
@@ -165,23 +190,28 @@ const ProfileBody = ({ refreshing }) => {
           borderRadius: 30,
           backgroundColor: GlobalStyles.colors.purple,
         },
-        tabBarStyle: {
-          padding: 0,
-          margin: 0,
-          justifyContent: "center",
-          width: "100%",
-          elevation: 0,
-          backgroundColor: "transparent",
-          borderBottomWidth: 1,
-          borderBottomColor: "rgba(255,255,255,0.1)",
-        },
+        tabBarStyle: [
+          tabBarStyle,  // Applique le style d'animation à la TabBar
+          {
+            padding: 0,
+            margin: 0,
+            justifyContent: "center",
+            width: "100%",
+            elevation: 0,
+            backgroundColor: "transparent",
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(255,255,255,0.1)",
+          },
+        ],
         tabBarPressColor: "white",
+        tabBarPosition: "top",  // La TabBar est en haut
+        tabBarScrollEnabled: false,  // Désactive le défilement horizontal
       }}
     >
       <TopTab.Screen
         name="Posts"
         options={{
-          title: "Posts",
+          title: "My Posts",
         }}
       >
         {({ navigation, route }) => (
@@ -192,10 +222,17 @@ const ProfileBody = ({ refreshing }) => {
           />
         )}
       </TopTab.Screen>
+
+      <TopTab.Screen
+        name="My Activities"
+        options={{ title: "My Activities" }}
+        children={() => <MyActivities />}
+      />
+
       <TopTab.Screen
         name="Likes"
         options={{
-          title: "Likes",
+          title: "Favorite",
         }}
       >
         {({ navigation, route }) => (
@@ -209,7 +246,5 @@ const ProfileBody = ({ refreshing }) => {
     </TopTab.Navigator>
   );
 };
- 
+
 export default ProfileBody;
- 
-const styles = StyleSheet.create({});

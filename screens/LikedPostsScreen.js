@@ -40,7 +40,7 @@ const LikedPostsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Liked Posts</Text>
+      <Text style={styles.header}>Favorite Posts</Text>
       <FlatList
         data={likedPosts}
         renderItem={renderPost}

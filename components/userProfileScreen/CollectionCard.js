@@ -19,17 +19,17 @@ const CollectionCard = ({ title }) => {
 
   // Determine the image based on the title
   let imageSource;
-  if (title === "Liked Posts") {
+  if (title === "Favorite Posts") {
     imageSource = require("../../assets/LikedPosts.png"); // Image for LikedPosts
-  } else if (title === "Liked Activities") {
+  } else if (title === "Favorite Activities") {
     imageSource = require("../../assets/LikedActivities.png"); // Image for LikedActivities
   }
 
   // Handle the press event
   const handlePress = () => {
-    if (title === "Liked Activities") {
+    if (title === "Favorite Activities") {
       navigation.navigate("LikedActivitiesScreen"); // Navigate to "LikedActivitiesScreen"
-    } else if (title === "Liked Posts") {
+    } else if (title === "Favorite Posts") {
       navigation.navigate("LikedPostsScreen"); // Navigate to "LikedPostsScreen"
     }
   };
