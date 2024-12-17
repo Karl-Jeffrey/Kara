@@ -27,6 +27,9 @@ import { GlobalStyles } from "./constants/Styles";
 import ExploreScreen from "./screens/ExploreScreen";
 import ViewStoryScreen from "./screens/ViewStoryScreen";
 import WelcomeScreen from './screens/WelcomeScreen';  // Import the new screen
+import LikedActivitiesScreen from './screens/LikedActivitiesScreen'; // Adjust path as needed
+import LikedPostsScreen from "./screens/LikedPostsScreen";
+//import LikedPostsScreen from './screens/LikedPostsScreen'; // Adjust path as needed
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -131,6 +134,9 @@ export const SignedInStack = () => {
             name="UserProfileScreen"
             component={UserProfileScreen}
           />
+          <Stack.Screen name="LikedActivitiesScreen" component={LikedActivitiesScreen} />
+          <Stack.Screen name="LikedPostsScreen" component={LikedPostsScreen} />
+
           <Stack.Screen name="SearchScreen" component={SearchScreen} />
 
           <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
@@ -154,6 +160,7 @@ export const SignedOutStack = () => (
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="SignupScreen" component={SignupScreen} />
       <Stack.Screen name="IdentityScreen" component={IdentityScreen} />
+      <Stack.Screen name="LikedActivities" component={LikedActivitiesScreen} />
     </Stack.Navigator>
   </NavigationContainer>
 );

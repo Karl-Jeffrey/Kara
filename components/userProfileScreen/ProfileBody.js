@@ -11,15 +11,15 @@ import { createMaterialTopTabNavigator } from "@react-navigation/material-top-ta
 import { GlobalStyles } from "../../constants/Styles.js";
 import { FlatList } from "react-native-gesture-handler";
 import CollectionCard from "./CollectionCard.js";
-
+ 
 import React, { useState, useEffect, useContext } from "react";
 import Post from "../../components/userProfileScreen/Post";
 import { AuthContext } from "../../store/auth-context";
 import { Ionicons } from "@expo/vector-icons";
 import { POSTS } from "../../data/posts.js";
-
+ 
 const TopTab = createMaterialTopTabNavigator();
-
+ 
 function Posts({ navigation, route, refreshing }) {
   const authCtx = useContext(AuthContext);
   const [fetching, setFetching] = useState(true);
@@ -28,7 +28,7 @@ function Posts({ navigation, route, refreshing }) {
   const getPosts = async () => {
     try {
       setFetching(true);
-
+ 
       setErrorFetching(false);
       setPosts(POSTS);
     } catch (error) {
@@ -116,8 +116,8 @@ function Posts({ navigation, route, refreshing }) {
     </View>
   );
 }
-
-function Videos() {
+ 
+function Likes() {
   return (
     <View style={{ backgroundColor: GlobalStyles.colors.primary }}>
       <FlatList
@@ -127,13 +127,17 @@ function Videos() {
           alignItems: "center",
           paddingBottom: GlobalStyles.styles.tabBarPadding,
         }}
-        keyExtractor={(data, index) => index.toString()}
-        data={[1, 2, 3, 4, 5, 6]}
+        keyExtractor={(item) => item.id.toString()} // Use item.id for the key
+        data={[
+          { id: 1, title: "Liked Posts" },
+          { id: 2, title: "Liked Activities" },
+        ]}
         numColumns={2}
-        renderItem={({ data, index }) => {
+        renderItem={({ item }) => { // Use 'item' here to access the data
           return (
             <View>
-              <CollectionCard />
+              {/* Pass title as prop to CollectionCard */}
+              <CollectionCard title={item.title} />
             </View>
           );
         }}
@@ -141,6 +145,7 @@ function Videos() {
     </View>
   );
 }
+
 const ProfileBody = ({ refreshing }) => {
   return (
     <TopTab.Navigator
@@ -176,7 +181,7 @@ const ProfileBody = ({ refreshing }) => {
       <TopTab.Screen
         name="Posts"
         options={{
-          title: "Images",
+          title: "Posts",
         }}
       >
         {({ navigation, route }) => (
@@ -188,13 +193,13 @@ const ProfileBody = ({ refreshing }) => {
         )}
       </TopTab.Screen>
       <TopTab.Screen
-        name="Videos"
+        name="Likes"
         options={{
-          title: "VIDS",
+          title: "Likes",
         }}
       >
         {({ navigation, route }) => (
-          <Videos
+          <Likes
             navigation={navigation}
             route={route}
             refreshing={refreshing}
@@ -204,7 +209,7 @@ const ProfileBody = ({ refreshing }) => {
     </TopTab.Navigator>
   );
 };
-
+ 
 export default ProfileBody;
-
+ 
 const styles = StyleSheet.create({});

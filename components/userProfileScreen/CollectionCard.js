@@ -7,53 +7,48 @@ import {
   View,
 } from "react-native";
 import React from "react";
-import { POSTS } from "../../data/posts";
-import { USERS } from "../../data/users";
 import { useNavigation } from "@react-navigation/native";
+
 const { height, width } = Dimensions.get("window");
-const size = width / 4 - 10;
-const CollectionCard = () => {
-  const navigation = useNavigation();
+// Set the card width and height
+const size = width / 2 - 20; // Making the cards half the screen width
+const cardHeight = size * 1.5; // Set the card height to be higher than the width
+
+const CollectionCard = ({ title }) => {
+  const navigation = useNavigation(); // Initialize navigation
+
+  // Determine the image based on the title
+  let imageSource;
+  if (title === "Liked Posts") {
+    imageSource = require("../../assets/LikedPosts.png"); // Image for LikedPosts
+  } else if (title === "Liked Activities") {
+    imageSource = require("../../assets/LikedActivities.png"); // Image for LikedActivities
+  }
+
+  // Handle the press event
+  const handlePress = () => {
+    if (title === "Liked Activities") {
+      navigation.navigate("LikedActivitiesScreen"); // Navigate to "LikedActivitiesScreen"
+    } else if (title === "Liked Posts") {
+      navigation.navigate("LikedPostsScreen"); // Navigate to "LikedPostsScreen"
+    }
+  };
+
   return (
-    <Pressable
-      onPress={() => {}}
-      android_ripple={{ color: "rgba(255, 255, 255,0.5)", foreground: true }}
-      style={styles.container}
-    >
-      <View style={styles.row}>
-        <Image
-          source={{ uri: POSTS[0].imageUrl }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-        <Image
-          source={{ uri: USERS[1].image }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      </View>
-      <View style={styles.row}>
-        <Image
-          source={{ uri: POSTS[0].imageUrl }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-        <Image
-          source={{ uri: USERS[1].story }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      </View>
+    <Pressable style={styles.container} onPress={handlePress}>
+      {/* Add an image for the background */}
+      <Image source={imageSource} style={styles.image} />
+      {/* Title */}
       <View style={{ position: "absolute" }}>
         <Text
           style={{
             color: "white",
             textAlign: "center",
             fontWeight: "bold",
-            fontSize: 18,
+            fontSize: 24, // Larger text size for better visibility
           }}
         >
-          Collection Title
+          {title} {/* Display the title */}
         </Text>
       </View>
     </Pressable>
@@ -64,24 +59,20 @@ export default CollectionCard;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 20,
     overflow: "hidden",
-    margin: 5,
-    backgroundColor: "black",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    margin: 10, // Increase the margin for spacing
+    marginTop: 30, // Add margin to lower the card
+    backgroundColor: "black", // This ensures the background color of the card
+    width: size, // Set width
+    height: cardHeight, // Set height to be higher than the width
   },
   image: {
-    width: size,
-    height: size,
-    // margin: 5,
-    opacity: 0.5,
+    width: "100%", // Set the image width to fill the container
+    height: "100%", // Set the image height to fill the container
+    opacity: 0.5, // Add transparency if necessary
+    borderRadius: 20, // Optional: round the image corners to match the card
   },
 });
