@@ -27,10 +27,10 @@ import { GlobalStyles } from "./constants/Styles";
 import ExploreScreen from "./screens/ExploreScreen";
 import ViewStoryScreen from "./screens/ViewStoryScreen";
 import WelcomeScreen from './screens/WelcomeScreen';  // Import the new screen
+import ActivitySearchScreen from "./screens/ActivitySearchScreen";
 import LikedActivitiesScreen from './screens/LikedActivitiesScreen'; // Adjust path as needed
 import LikedPostsScreen from "./screens/LikedPostsScreen";
 //import LikedPostsScreen from './screens/LikedPostsScreen'; // Adjust path as needed
-
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -99,9 +99,10 @@ export const SignedInStack = () => {
       >
         {/* <Tab.Screen name="HomeTabStack" component={HomeTabStack} /> */}
         <Tab.Screen name="HomeScreen" component={HomeScreen} />
-        <Tab.Screen name="ExploreScreen" component={ExploreScreen} />
         <Tab.Screen name="ReelsScreen" component={ReelsScreen} />
         <Tab.Screen name="MessagesScreen" component={MessagesScreen} />
+        <Tab.Screen name="UserProfileScreen" component={UserProfileScreen} />
+        {/* <Tab.Screen name="ExploreScreen" component={ExploreScreen} /> */}
         {/* <Tab.Screen name="ReelsScreens" component={SearchScreen} /> */}
         {/* <Tab.Screen name="UserProfileScreen" component={UserProfileScreen} /> */}
       </Tab.Navigator>
@@ -116,7 +117,7 @@ export const SignedInStack = () => {
             component={BottomTabNavigator}
           />
 
-          <Stack.Screen name="NewPostScreen" component={NewPostScreen} />
+          <Stack.Screen name="ActivitySearchScreen" component={ActivitySearchScreen} />
           <Stack.Screen name="AddStoryScreen" component={AddStoryScreen} />
           <Stack.Screen name="ChatScreen" component={ChatScreen} />
 

@@ -69,7 +69,7 @@ const NewPostIcon = ({ exploreActive, pressed, setPressed }) => {
           <View
             onTouchEnd={() => {
               setPressed(false);
-              navigation.navigate("NewPostScreen");
+              navigation.navigate("ActivitySearchScreen");
             }}
             style={{
               padding: 10,
@@ -82,7 +82,7 @@ const NewPostIcon = ({ exploreActive, pressed, setPressed }) => {
             }}
           >
             <Image
-              source={require("../../assets/photo.png")}
+              source={require("../../assets/activity.png")}
               style={{
                 width: 30,
                 height: 30,
@@ -171,7 +171,7 @@ const NewPostIcon = ({ exploreActive, pressed, setPressed }) => {
               },
               rotationAnimation,
             ]}
-            source={require("../../assets/add.png")}
+            source={require("../../assets/search.png")}
           />
         )}
       </Pressable>

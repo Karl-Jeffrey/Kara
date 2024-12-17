@@ -37,7 +37,7 @@ const Header = ({ navigation }) => (
             navigation.navigate("SearchScreen");
           }}
         >
-          <Ionicons name="search" size={25} color={"white"} />
+          <Ionicons name="person-add-outline" size={25} color={"white"} />
         </Pressable>
       </PressEffect>
       <PressEffect>
@@ -49,9 +49,6 @@ const Header = ({ navigation }) => (
         >
           <Ionicons name="notifications" size={25} color={"white"} />
           <View style={styles.unreadBadge} />
-          {/* <View style={styles.unreadBadge}>
-            <Text style={styles.unreadBadgeText}>6</Text>
-          </View> */}
         </Pressable>
       </PressEffect>
     </View>
@@ -72,12 +69,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     flexDirection: "row",
-  },
-  logo: {
-    width: 100,
-    height: 50,
-    resizeMode: "contain",
-    tintColor: "white",
   },
   icon: {
     marginLeft: 10,

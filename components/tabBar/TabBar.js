@@ -20,12 +20,6 @@ const TabBar = ({ state, descriptors, navigation }) => {
       iconUnfocued: require("../../assets/home.png"),
     },
     {
-      name: "Explore",
-      icon: require("../../assets/explore-focused.png"),
-      iconUnfocued: require("../../assets/explore.png"),
-    },
-
-    {
       name: "Reels",
       icon: require("../../assets/reels-focused.png"),
       iconUnfocued: require("../../assets/reels.png"),
@@ -34,6 +28,11 @@ const TabBar = ({ state, descriptors, navigation }) => {
       name: "Chat",
       icon: require("../../assets/chat-focused.png"),
       iconUnfocued: require("../../assets/chat.png"),
+    },
+    {
+      name: "Profil",
+      icon: require("../../assets/profil-focused.png"),
+      iconUnfocued: require("../../assets/profil.png"),
     },
   ];
   const [tabBarHeight, setTabBarHeight] = useState(50);
