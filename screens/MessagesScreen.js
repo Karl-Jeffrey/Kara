@@ -1,13 +1,20 @@
-import { FlatList, StatusBar, StyleSheet, Text, View } from "react-native";
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
+import {
+  FlatList,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import InputField from "../components/InputField";
 import MessageCard from "../components/messagesScreen/MessageCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GlobalStyles } from "../constants/Styles";
 
-const MessagesScreen = ({ navigation, route }) => {
+const ActivitySearchScreen = ({ navigation, route }) => {
   const [search, setSearch] = useState("");
   const [paddingTop, setPaddingTop] = useState(0);
+
   return (
     <SafeAreaView style={styles.container}>
       <View
@@ -52,7 +59,7 @@ const MessagesScreen = ({ navigation, route }) => {
   );
 };
 
-export default MessagesScreen;
+export default ActivitySearchScreen;
 
 const styles = StyleSheet.create({
   container: {

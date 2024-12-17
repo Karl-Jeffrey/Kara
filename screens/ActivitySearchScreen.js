@@ -12,10 +12,14 @@ import {
   Platform 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { GlobalStyles, DEFAULT_DP } from '../constants/Styles';
+import { GlobalStyles } from '../constants/Styles';
+import { StatusBar } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons
 
 const ActivitySearchScreen = () => {
   const navigation = useNavigation();
+  const [search, setSearch] = React.useState('');
+  const [paddingTop, setPaddingTop] = React.useState(0);
   const [refreshing, setRefreshing] = React.useState(false);
 
   const activities = [
@@ -61,23 +65,37 @@ const ActivitySearchScreen = () => {
       style={styles.container}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0} // Adds space above the search bar
     >
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search activities..."
-        placeholderTextColor={GlobalStyles.colors.gray}
-      />
-      <Text style={styles.suggestionsTitle}>Suggestions</Text>
+      <View
+        style={{
+          position: 'absolute',
+          zIndex: 10,
+          top: 0,
+          width: '100%',
+          marginTop: StatusBar.currentHeight + 15,
+        }}
+      >
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search-outline"
+            size={25}
+            color={GlobalStyles.colors.purple}
+          />
+          <TextInput
+            style={styles.inputField}
+            placeholder="Search activities..."
+            placeholderTextColor={GlobalStyles.colors.gray}
+            onChangeText={setSearch}
+            value={search}
+          />
+        </View>
+      </View>
+
       <FlatList
         data={activities}
         renderItem={renderActivityCard}
         keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-          />
-        }
-        contentContainerStyle={styles.activityList}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={{ paddingTop: 60, gap: 20 }} // Adjust paddingTop as needed
       />
       <Pressable
         style={styles.filterButton}
@@ -95,22 +113,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: GlobalStyles.colors.primary,
-    padding: 10
+    padding: 20
   },
-  searchBar: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Darker background for better contrast
-    color: 'white',
-    padding: 15, // Increased padding to make it taller
-    borderRadius: 5,
-    marginBottom: 10,
-    fontSize: 20 // Increased font size for better readability
+  inputField: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GlobalStyles.colors.primary500,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: GlobalStyles.colors.primary500,
+    padding: 10,
+    flex: 1 // Ensures the text input takes up all available space
   },
-  suggestionsTitle: {
-    color: GlobalStyles.colors.purple,
-    fontSize: 24,
-    fontWeight: 'light',
-    marginBottom: 10,
-    paddingLeft: 10,
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center', // Centers the search bar horizontally
+    backgroundColor: GlobalStyles.colors.primary500,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: GlobalStyles.colors.primary500,
+    paddingHorizontal: 20, // Adds horizontal padding to the search bar
+    marginTop: 0, // Centers the search bar at the top
+    marginBottom: 20,
+    marginHorizontal: 30
   },
   activityList: {
     flexGrow: 1,
