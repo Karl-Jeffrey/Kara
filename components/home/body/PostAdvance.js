@@ -23,9 +23,9 @@ const { height, width } = Dimensions.get("window");
 
 function PostAdvance({ post }) {
   const authCtx = useContext(AuthContext);
+  const navigation = useNavigation();
 
   function Avatar() {
-    const navigation = useNavigation();
     const [profilePic, setProfilePic] = useState(
       !!post.userPicturePath ? post.userPicturePath : DEFAULT_DP
     );
@@ -55,7 +55,7 @@ function PostAdvance({ post }) {
               <Text
                 style={{ color: "white", fontWeight: "bold", fontSize: 15 }}
               >
-                {post.username} {/* Display username from post */}
+                {post.username}
               </Text>
               <Text
                 style={{
@@ -76,7 +76,7 @@ function PostAdvance({ post }) {
   function PostFotter() {
     const [showCaptions, setShowCaptions] = useState(false);
 
-    const activityTags = post.tags || []; // Assuming `tags` is an array of activity tags like ["indoor", "group", "fun"]
+    const activityTags = post.tags || [];
 
     return (
         <View style={{ marginHorizontal: 20 }}>
@@ -172,7 +172,7 @@ function PostAdvance({ post }) {
           borderColor: GlobalStyles.colors.primary600,
         }}
         onPress={() => {
-          setResizeModeCover(!resizeModeCover);
+          navigation.navigate("PostDetailScreen", { post });
         }}
       >
         <ImageBackground
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   tagsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 5, // Space between tags
+    gap: 5,
   },
   tag: {
     fontSize: 12,
@@ -310,5 +310,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 5,
+  },
+  footerIcon: {
+    margin: 5,
   },
 });
