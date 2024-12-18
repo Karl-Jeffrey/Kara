@@ -55,25 +55,44 @@ const Header = ({ navigation }) => {
         </PressEffect>
       </View>
 
-      {/* Dropdown Menu for Add Options */}
-      <Modal transparent={true} visible={addMenuVisible} animationType="fade">
-        <TouchableOpacity style={styles.overlay} onPress={toggleAddMenu}>
-          <View style={styles.dropdownMenu}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Add Activity")}>
-              <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
-              <Text style={styles.menuText}>Add Activity</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Add Post")}>
-              <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
-              <Text style={styles.menuText}>Add Post</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Add Story")}>
-              <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
-              <Text style={styles.menuText}>Add Story</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+     {/* Dropdown Menu for Add Options */}
+<Modal transparent={true} visible={addMenuVisible} animationType="fade">
+  <TouchableOpacity style={styles.overlay} onPress={toggleAddMenu}>
+    <View style={styles.dropdownMenu}>
+      <TouchableOpacity
+        style={styles.menuItem}
+        onPress={() => {
+          toggleAddMenu();
+          navigation.navigate("CreateActivityScreen");
+        }}
+      >
+        <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
+        <Text style={styles.menuText}>Add Activity</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.menuItem}
+        onPress={() => {
+          toggleAddMenu();
+          console.log("Add Post");
+        }}
+      >
+        <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
+        <Text style={styles.menuText}>Add Post</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.menuItem}
+        onPress={() => {
+          toggleAddMenu();
+          console.log("Add Story");
+        }}
+      >
+        <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
+        <Text style={styles.menuText}>Add Story</Text>
+      </TouchableOpacity>
+    </View>
+  </TouchableOpacity>
+</Modal>
+
 
       {/* Dropdown Menu for Account Options */}
       <Modal transparent={true} visible={menuVisible} animationType="fade">
