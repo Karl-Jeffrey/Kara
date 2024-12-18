@@ -100,6 +100,7 @@ export const SignedInStack = () => {
             name="ActivitySearchScreen"
             component={ActivitySearchScreen}
           />
+          <Stack.Screen name="NewPostScreen" component={NewPostScreen} />
           <Stack.Screen name="AddStoryScreen" component={AddStoryScreen} />
           <Stack.Screen name="ChatScreen" component={ChatScreen} />
           <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />

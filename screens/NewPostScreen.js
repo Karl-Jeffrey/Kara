@@ -2,208 +2,144 @@ import {
   View,
   StyleSheet,
   Dimensions,
-  ImageBackground,
   Pressable,
   KeyboardAvoidingView,
+  Platform,
+  Image,
+  Text,
 } from "react-native";
-
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState, useCallback } from "react";
 import { GlobalStyles } from "../constants/Styles";
 import Button from "../components/Button";
 import InputField from "../components/InputField";
 import { Ionicons } from "@expo/vector-icons";
-import CameraScreen from "./CameraScreen";
 import { AuthContext } from "../store/auth-context";
-import { getFilename } from "../utils/helperFunctions";
 import ProgressOverlay from "../components/ProgressOverlay";
 import ErrorOverlay from "../components/ErrorOverlay";
-import UploadIcon from "../assets/UploadIcon";
-import { Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import * as ImagePicker from 'expo-image-picker'; // Import the required library
 
 const { width, height } = Dimensions.get("window");
-const PLACEHOLDER_IMAGE =
-  "https://img.freepik.com/free-vector/image-folder-concept-illustration_114360-114.jpg?t=st=1708625623~exp=1708629223~hmac=155af0101788f9a6c147e4a7fa105127a5089c3bf46ded7b7cd2f15de53ec39c&w=740";
 
-function NewPostScreen({ navigation, route }) {
+function NewPostScreen({ navigation }) {
   const authCtx = useContext(AuthContext);
   const [type, setType] = useState();
   const [post, setPost] = useState(null);
-  const [resizeModeCover, setResizeModeCover] = useState(true);
-  const [showCamera, setShowCamera] = useState(true);
   const [caption, setCaption] = useState("");
-
   const [uploading, setUploading] = useState({
     status: false,
     progress: 0,
     success: true,
   });
 
-  useEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      title: "New Post",
-    });
-  }, []);
-
-  useEffect(() => {
-    if (route?.params?.type) {
-      setType(route?.params?.type);
-    }
-  }, [route?.params?.type]);
-  async function newPostHandler() {
+  const newPostHandler = useCallback(async () => {
     if (post) {
-      const filenameData = getFilename(post);
-
       const formData = new FormData();
       formData.append("userId", authCtx.userData._id);
       formData.append("description", caption);
-
       formData.append("picture", {
-        uri: post,
-        type: "image/" + filenameData.fileType,
-        name: filenameData.name,
+        uri: post.uri,
+        type: post.type,
+        name: post.fileName,
       });
-      formData.append("picturePath", filenameData.name);
+
       try {
-        setUploading((prevData) => {
-          return { ...prevData, status: true };
-        });
+        setUploading((prevData) => ({
+          ...prevData,
+          status: true,
+        }));
+
+        // Simulate an upload delay for demonstration
         setTimeout(() => {
           setUploading({ status: false, progress: 0, success: true });
-          navigation.goBack();
+          navigation.goBack(); // Navigate back after upload
         }, 3000);
       } catch (error) {
-        setUploading((prevData) => {
-          return { ...prevData, success: false };
-        }),
-          console.log(error.message);
+        setUploading((prevData) => ({
+          ...prevData,
+          success: false,
+        }));
+        console.log(error.message);
       }
     }
-  }
+  }, [authCtx.userData._id, caption, post, navigation]);
+
+  const openImagePicker = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (result.cancelled) {
+      console.log("User cancelled image picker");
+    } else if (result.error) {
+      console.error("Image picker error:", result.error);
+    } else {
+      setPost(result);
+    }
+  };
+
+  const openCamera = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (result.cancelled) {
+      console.log("User cancelled camera picker");
+    } else if (result.error) {
+      console.error("Camera picker error:", result.error);
+    } else {
+      setPost(result);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={[styles.container]}
+      style={styles.container}
     >
       <StatusBar backgroundColor={GlobalStyles.colors.primary} />
-      <CameraScreen
-        showCamera={showCamera}
-        setShowCamera={setShowCamera}
-        getPost={setPost}
-        mode={type === "video" ? type : undefined}
-      />
+      <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back-outline" size={30} color="white" />
+      </Pressable>
       {!post ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <UploadIcon
-            onPress={() => setShowCamera(true)}
-            width={GlobalStyles.styles.windowWidth - 50}
-            height={height / 2}
-          />
+        <View style={styles.buttonContainer}>
+          <Pressable onPress={openImagePicker} style={styles.uploadIcon}>
+            <Ionicons name="image-outline" size={50} color="white" />
+            <Text style={styles.uploadText}>Upload</Text>
+          </Pressable>
+          <Pressable onPress={openCamera} style={styles.uploadIcon}>
+            <Ionicons name="camera-outline" size={50} color="white" />
+            <Text style={styles.uploadText}>Camera</Text>
+          </Pressable>
         </View>
       ) : (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 10,
-          }}
-        >
-          <View
-            style={{
-              width: "100%",
-              borderRadius: 40,
-              backgroundColor: GlobalStyles.colors.primary300,
-              padding: 10,
-            }}
-          >
-            <View
-              style={{
-                width: "100%",
-                height: height / 2,
-                backgroundColor: GlobalStyles.colors.primary300,
-                borderRadius: 30,
-                overflow: "hidden",
-              }}
-            >
-              <ImageBackground
-                source={{
-                  uri: post,
-                }}
-                style={{
-                  flex: 1,
-                }}
-                imageStyle={{
-                  resizeMode: resizeModeCover ? "cover" : "contain",
-                }}
-              >
-                <Pressable
-                  style={{
-                    flex: 1,
-                    alignItems: "flex-end",
-                    justifyContent: "flex-end",
-                    margin: 20,
-                  }}
-                  onPress={() => {
-                    setResizeModeCover(!resizeModeCover);
-                  }}
-                >
-                  <Pressable
-                    style={{
-                      backgroundColor: "white",
-                      borderRadius: 50,
-                      padding: 10,
-                    }}
-                    onPress={() => {
-                      setShowCamera(true);
-                    }}
-                  >
-                    <Ionicons
-                      name="sync-outline"
-                      size={25}
-                      color={GlobalStyles.colors.blue}
-                    />
-                  </Pressable>
-                </Pressable>
-              </ImageBackground>
-            </View>
-            <View style={{ marginTop: 10 }}>
-              <InputField
-                style={{ color: "white" }}
-                placeholder="What's on your mind?"
-                multiline={true}
-                onChangeText={setCaption}
-                value={caption}
-                inValid={true}
-              />
-            </View>
-          </View>
+        <View style={styles.previewContainer}>
+          <Image
+            source={{ uri: post.uri }}
+            style={styles.imagePreview}
+          />
+          <Pressable style={styles.resizeButton} onPress={() => setPost(null)}>
+            <Ionicons name="close-outline" size={30} color="white" />
+          </Pressable>
+          <InputField placeholder="What's on your mind?" multiline={true} onChangeText={setCaption} value={caption} />
         </View>
       )}
-      <View
-        style={{
-          padding: 20,
-        }}
-      >
-        <Button title={"Post"} onPress={newPostHandler} />
-      </View>
+      {post && (
+        <View style={{ padding: 20 }}>
+          <Button title={"Post"} onPress={newPostHandler} />
+        </View>
+      )}
       {uploading.status && (
         <>
           {uploading.success ? (
-            <ProgressOverlay
-              title={"Uploading"}
-              progress={uploading.progress}
-            />
+            <ProgressOverlay title={"Uploading"} progress={uploading.progress} />
           ) : (
-            <ErrorOverlay
-              message={"Uploading Failed"}
-              onClose={() => {
-                setUploading({ status: false, progress: 0, success: true });
-              }}
-            />
+            <ErrorOverlay message={"Uploading Failed"} onClose={() => setUploading({ status: false, progress: 0, success: true })} />
           )}
         </>
       )}
@@ -215,7 +151,50 @@ export default NewPostScreen;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: GlobalStyles.colors.primary,
     flex: 1,
+    backgroundColor: GlobalStyles.colors.primary,
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    padding: 5,
+    backgroundColor: GlobalStyles.colors.primary,
+    borderRadius: 5,
+  },
+  buttonContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  uploadIcon: {
+    marginVertical: 10,
+    padding: 20,
+    borderRadius: 10,
+    backgroundColor: GlobalStyles.colors.lightpurple,
+    alignItems: "center",
+  },
+  uploadText: {
+    marginTop: 5,
+    color: "white",
+  },
+  previewContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagePreview: {
+    width: "100%",
+    height: height / 2,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  resizeButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "black",
+    borderRadius: 30,
+    padding: 5,
   },
 });

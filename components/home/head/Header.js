@@ -64,7 +64,13 @@ const Header = ({ navigation }) => {
               <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
               <Text style={styles.menuText}>Add Activity</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Add Post")}>
+            <TouchableOpacity 
+              style={styles.menuItem} 
+              onPress={() => {
+                toggleAddMenu(); // Close the add menu
+                navigation.navigate("NewPostScreen"); // Navigate to NewPostScreen
+              }}
+            >
               <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
               <Text style={styles.menuText}>Add Post</Text>
             </TouchableOpacity>
@@ -147,7 +153,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.3)",
   },
   dropdownMenu: {
-    backgroundColor: GlobalStyles.colors.primary600, // Use the lighter color here
+    backgroundColor: GlobalStyles.colors.primary600,
     width: 200,
     borderRadius: 10,
     shadowColor: "#000",
