@@ -26,6 +26,7 @@ export const GlobalStyles = {
     darkGreen: "#297e2b",
     tabBarColor: "#07070F",
     yellow: "#E0FF55",
+    lightpurple: "#7656b9",
   },
   styles: StyleSheet.create({
     tabBarPadding: 100,

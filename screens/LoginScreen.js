@@ -22,7 +22,7 @@ const LoginScreen = ({ navigation }) => {
             color: "white",
           }}
         >
-          Welcome Back!
+          Welcome to Kara!
         </Text>
         <Text
           style={{
@@ -30,7 +30,7 @@ const LoginScreen = ({ navigation }) => {
             color: "rgba(255,255,255,0.6)",
           }}
         >
-          Sign in to be continoue
+          Sign in to continue
         </Text>
       </View>
       <View style={{ marginHorizontal: 10 }}>

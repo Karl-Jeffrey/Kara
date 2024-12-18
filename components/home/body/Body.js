@@ -42,7 +42,7 @@ const Body = ({ StoryTranslate }) => {
       <TopTab.Screen name="Feed">
         {() => <Feed StoryTranslate={StoryTranslate} />}
       </TopTab.Screen>
-      <TopTab.Screen name="Video">
+      <TopTab.Screen name="What's Hot">
         {() => <Video StoryTranslate={StoryTranslate} />}
       </TopTab.Screen>
     </TopTab.Navigator>

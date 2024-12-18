@@ -76,7 +76,7 @@ const SignupForm = ({ navigation }) => {
               inValid={
                 values.fullname.length === 0 || values.fullname.length > 1
               }
-              containerStyle={{ margin: 10 }}
+              containerStyle={{ margin: 10, borderRadius: 6 }}
             />
             <InputField
               placeholder="Username"
@@ -88,7 +88,7 @@ const SignupForm = ({ navigation }) => {
               inValid={
                 values.username.length === 0 || values.username.length > 1
               }
-              containerStyle={{ margin: 10 }}
+              containerStyle={{ margin: 10, borderRadius: 6 }}
             />
             <InputField
               placeholder="Email"
@@ -100,7 +100,7 @@ const SignupForm = ({ navigation }) => {
               inValid={
                 values.email.length < 1 || Validator.validate(values.email)
               }
-              containerStyle={{ margin: 10 }}
+              containerStyle={{ margin: 10, borderRadius: 6 }}
             />
             <InputField
               placeholder="Password"
@@ -112,16 +112,24 @@ const SignupForm = ({ navigation }) => {
               inValid={
                 values.password.length === 0 || values.password.length > 7
               }
-              containerStyle={{ margin: 10 }}
+              containerStyle={{ margin: 10, borderRadius: 6 }}
             />
-            <View style={{ margin: 10, marginTop: 30 }}>
-              <Button
-                title="Sign up"
+ <View style={{ margin: 10, marginBottom: 0 }}>
+              {/* TouchableOpacity for more control */}
+              <TouchableOpacity
+                style={{
+                  backgroundColor:  GlobalStyles.colors.blue,
+                  paddingVertical: 12,
+                  borderRadius: 6, // Square corners
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
                 onPress={handleSubmit}
                 disabled={!isValid}
-              />
+              >
+                <Text style={{ color: "white", fontSize: 18 }}>Log in</Text>
+              </TouchableOpacity>
             </View>
-
             <View style={styles.signupContainer}>
               <Text style={{ color: GlobalStyles.colors.gray }}>
                 Already have an account?

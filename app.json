@@ -7,9 +7,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/KaraSplashScreen.png",
       "resizeMode": "contain",
-      "backgroundColor": "#262938"
+      "backgroundColor": "#FFFFFF"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -27,5 +27,6 @@
     "web": {
       "favicon": "./assets/favicon.png"
     }
+   
   }
 }

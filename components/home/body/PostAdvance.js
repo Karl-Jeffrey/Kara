@@ -17,23 +17,23 @@ import { timeDifference } from "../../../utils/helperFunctions";
 import { AuthContext } from "../../../store/auth-context";
 import PressEffect from "../../UI/PressEffect";
 import { LinearGradient } from "expo-linear-gradient";
+import { Platform } from "react-native";
+
 const { height, width } = Dimensions.get("window");
 
 function PostAdvance({ post }) {
   const authCtx = useContext(AuthContext);
+  const navigation = useNavigation();
 
   function Avatar() {
-    const navigation = useNavigation();
-    const [profilePic, setProfilePic] = React.useState(
+    const [profilePic, setProfilePic] = useState(
       !!post.userPicturePath ? post.userPicturePath : DEFAULT_DP
     );
     return (
       <View style={{ flexDirection: "row" }}>
         <PressEffect>
           <Pressable
-            style={{
-              flexDirection: "row",
-            }}
+            style={{ flexDirection: "row" }}
             onPress={() => {
               navigation.navigate("UserProfileScreen", {
                 backWhite: true,
@@ -51,19 +51,11 @@ function PostAdvance({ post }) {
               }
               style={styles.story}
             />
-            <View
-              style={{
-                marginLeft: 10,
-              }}
-            >
+            <View style={{ marginLeft: 10 }}>
               <Text
-                style={{
-                  color: "white",
-                  fontWeight: "bold",
-                  fontSize: 15,
-                }}
+                style={{ color: "white", fontWeight: "bold", fontSize: 15 }}
               >
-                username
+                {post.username}
               </Text>
               <Text
                 style={{
@@ -80,61 +72,86 @@ function PostAdvance({ post }) {
       </View>
     );
   }
+
   function PostFotter() {
     const [showCaptions, setShowCaptions] = useState(false);
 
+    const activityTags = post.tags || [];
+
     return (
-      <View style={{ marginHorizontal: 20 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginTop: 10,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Ionicons
-              name="location"
-              size={15}
-              color={GlobalStyles.colors.gray}
-            />
-            <Text
-              style={{ color: GlobalStyles.colors.gray, paddingHorizontal: 5 }}
+        <View style={{ marginHorizontal: 20 }}>
+            <View
+                style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginTop: 10,
+                }}
             >
-              Lahore, Pakistan
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Ionicons
+                        name="location"
+                        size={15}
+                        color={GlobalStyles.colors.gray}
+                    />
+                    <Text
+                        style={{ color: GlobalStyles.colors.gray, paddingHorizontal: 5 }}
+                    >
+                        {post.location}
+                    </Text>
+                </View>
+                <Text
+                    style={{ color: GlobalStyles.colors.gray, paddingHorizontal: 5 }}
+                >
+                    {new Date(post.createdAt).toLocaleDateString("en-CA")}
+                </Text>
+            </View>
+            <Text
+                onPress={() => setShowCaptions(!showCaptions)}
+                numberOfLines={showCaptions ? undefined : 1}
+                style={{
+                    color: "white",
+                    padding: 5,
+                    paddingBottom: 10,
+                    width: showCaptions ? undefined : "90%",
+                    fontFamily: Platform.OS === 'ios' ? 'Poppins' : 'sans-serif',
+                }}
+            >
+                <Text
+                    style={{
+                        fontWeight: "bold",
+                        fontSize: 22,
+                        color: GlobalStyles.colors.purple,
+                    }}
+                >
+                    {post.title}{" "}
+                </Text>
+                <View style={styles.tagsContainer}>
+                  {activityTags.map((tag, index) => (
+                      <Text
+                          key={index}
+                          style={styles.tag}
+                      >
+                          {tag}
+                      </Text>
+                  ))}
+                </View>
             </Text>
-          </View>
-          <Text
-            style={{ color: GlobalStyles.colors.gray, paddingHorizontal: 5 }}
-          >
-            25 July, 2024
-          </Text>
+            <Text
+                style={{
+                    color: "white",
+                    padding: 5,
+                    paddingBottom: 10,
+                    fontWeight: "bold",
+                    fontSize: 16,
+                }}
+            >
+                ${post.prices.amount}
+            </Text>
         </View>
-        <Text
-          onPress={() => setShowCaptions(!showCaptions)}
-          numberOfLines={showCaptions ? undefined : 1}
-          style={{
-            color: "white",
-            padding: 5,
-            paddingBottom: 10,
-            width: showCaptions ? undefined : "90%",
-          }}
-        >
-          <Text
-            style={{
-              fontWeight: "bold",
-              fontSize: 18,
-              color: GlobalStyles.colors.purple,
-            }}
-          >
-            Post Title:{" "}
-          </Text>
-          {post.description}
-        </Text>
-      </View>
     );
   }
+
   function PostImage({ children }) {
     const [resizeModeCover, setResizeModeCover] = useState(true);
     const [ratio, setRatio] = useState(1);
@@ -142,11 +159,7 @@ function PostAdvance({ post }) {
     useEffect(() => {
       Image.getSize(post.picturePath, (width, height) => {
         const imageRatio = width / height;
-        if (imageRatio < 0.9) {
-          setRatio(1);
-        } else {
-          setRatio(imageRatio);
-        }
+        setRatio(imageRatio < 0.9 ? 1 : imageRatio);
       });
     }, [post]);
 
@@ -159,8 +172,7 @@ function PostAdvance({ post }) {
           borderColor: GlobalStyles.colors.primary600,
         }}
         onPress={() => {
-          setResizeModeCover(!resizeModeCover);
-          console.log("object");
+          navigation.navigate("PostDetailScreen", { post });
         }}
       >
         <ImageBackground
@@ -190,14 +202,14 @@ function PostAdvance({ post }) {
       </Pressable>
     );
   }
+
   function PostStats() {
     const [liked, setLiked] = useState(false);
-
     const [totalLikes, setTotalLikes] = useState(post.likes.length);
     const [showComments, setShowComments] = useState(false);
+
     async function handleLike() {
       setTotalLikes((prevData) => (liked ? prevData - 1 : prevData + 1));
-
       setLiked(!liked);
     }
 
@@ -216,22 +228,11 @@ function PostAdvance({ post }) {
                 }}
               >
                 <Ionicons
-                  style={{
-                    paddingHorizontal: 5,
-                  }}
+                  style={{ paddingHorizontal: 5 }}
                   name={icon}
                   size={20}
                   color={color}
                 />
-
-                {/* <Text
-                  style={{
-                    color: "white",
-                    fontWeight: "600",
-                  }}
-                >
-                  {number}
-                </Text> */}
               </View>
             </PressEffect>
           </Pressable>
@@ -252,13 +253,7 @@ function PostAdvance({ post }) {
           }}
         >
           <Avatar />
-          <View
-            style={{
-              alignItems: "center",
-              flexDirection: "row",
-              gap: 5,
-            }}
-          >
+          <View style={{ alignItems: "center", flexDirection: "row", gap: 5 }}>
             <FooterButton
               icon={liked ? "heart" : "heart-outline"}
               number={totalLikes}
@@ -268,11 +263,8 @@ function PostAdvance({ post }) {
             <FooterButton
               icon={"chatbubble-ellipses"}
               number={post.comments.length}
-              onPress={() => {
-                setShowComments(true);
-              }}
+              onPress={() => setShowComments(true)}
             />
-
             <FooterButton icon={"arrow-redo"} onPress={() => {}} left={20} />
           </View>
         </View>
@@ -303,5 +295,23 @@ const styles = StyleSheet.create({
     width: 35,
     height: 35,
     borderRadius: 50,
+  },
+  tagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 5,
+  },
+  tag: {
+    fontSize: 12,
+    color: "#FFFF",
+    fontFamily: Platform.OS === 'ios' ? 'Poppins' : 'sans-serif',
+    fontWeight: "400",
+    backgroundColor: GlobalStyles.colors.blue,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  footerIcon: {
+    margin: 5,
   },
 });
