@@ -236,7 +236,6 @@ function Post({ post }) {
             }}
           >
             {post.description}
-            akmfadlsa,d;sal,d;lasdas;ld;salaldsa;sld;dlsaskdasdalksd
           </Text>
         )}
       </>

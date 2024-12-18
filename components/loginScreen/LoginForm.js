@@ -15,7 +15,7 @@ const LoginForm = ({ navigation }) => {
 
   const LoginFormSchema = yup.object().shape({
     email: yup.string().email().required("Email address is required."),
-    password: yup.string().min(8, "Password must have a tleast 8 chracters."),
+    password: yup.string().min(8, "Password must have at least 8 characters."),
   });
 
   async function onLogin(email, password) {
@@ -55,7 +55,7 @@ const LoginForm = ({ navigation }) => {
               inValid={
                 values.email.length < 1 || Validator.validate(values.email)
               }
-              containerStyle={{ margin: 10 }}
+              containerStyle={{ margin: 10, borderRadius: 6 }} // Square corners
             />
             <InputField
               textContentType="password"
@@ -67,7 +67,7 @@ const LoginForm = ({ navigation }) => {
               inValid={
                 values.password.length === 0 || values.password.length > 7
               }
-              containerStyle={{ margin: 10 }}
+              containerStyle={{ margin: 10, borderRadius: 6 }} // Square corners
             />
             <TouchableOpacity>
               <Text
@@ -81,15 +81,23 @@ const LoginForm = ({ navigation }) => {
                 FORGOT PASSWORD?
               </Text>
             </TouchableOpacity>
+
             <View style={{ margin: 10, marginBottom: 0 }}>
-              <Button
-                title="Log in"
+              {/* TouchableOpacity for more control */}
+              <TouchableOpacity
+                style={{
+                  backgroundColor:  GlobalStyles.colors.blue,
+                  paddingVertical: 12,
+                  borderRadius: 6, // Square corners
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
                 onPress={handleSubmit}
                 disabled={!isValid}
-              />
+              >
+                <Text style={{ color: "white", fontSize: 18 }}>Log in</Text>
+              </TouchableOpacity>
             </View>
-            {/* <Text style={{color: 'red'}}>{errors.password}</Text>
-                <Text style={{color: 'red'}}>{errors.email}</Text> */}
 
             <View style={styles.signupContainer}>
               <Text style={{ color: GlobalStyles.colors.gray }}>
