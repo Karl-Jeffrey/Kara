@@ -30,6 +30,7 @@ import LikedActivitiesScreen from "./screens/LikedActivitiesScreen";
 import LikedPostsScreen from "./screens/LikedPostsScreen";
 import FilterScreen from "./screens/FilterScreen";
 import PostDetailScreen from "./screens/PostDetailScreen";
+import CreateActivityScreen from "./screens/CreateActivityScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -115,6 +116,7 @@ export const SignedInStack = () => {
           <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
           <Stack.Screen name="ViewStoryScreen" component={ViewStoryScreen} />
           <Stack.Screen name="PostDetailScreen" component={PostDetailScreen} />
+          <Stack.Screen name="CreateActivityScreen" component={CreateActivityScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AppContextProvider>
@@ -133,7 +135,6 @@ export const SignedOutStack = () => (
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="SignupScreen" component={SignupScreen} />
       <Stack.Screen name="IdentityScreen" component={IdentityScreen} />
-      <Stack.Screen name="LikedActivities" component={LikedActivitiesScreen} />
     </Stack.Navigator>
   </NavigationContainer>
 );

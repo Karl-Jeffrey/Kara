@@ -3,7 +3,7 @@ import { Text, View, StyleSheet, Image, Pressable, Modal, TouchableOpacity } fro
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { GlobalStyles, DEFAULT_DP } from "../../../constants/Styles";
 import PressEffect from "../../UI/PressEffect";
-
+import { useNavigation } from "@react-navigation/native"; // Import navigation
 const Header = ({ navigation }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
@@ -23,8 +23,7 @@ const Header = ({ navigation }) => {
       </Pressable>
 
       <View style={{ alignItems: "center" }}>
-        <Text style={{ color: "white", fontSize: 30, fontWeight: "bold" }}>Social</Text>
-        <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 15 }}>Welcome To Social</Text>
+        <Text style={{ color: "white", fontSize: 30, fontWeight: "bold" }}>Kara</Text>
       </View>
 
       <View style={styles.iconsContainer}>
@@ -64,13 +63,7 @@ const Header = ({ navigation }) => {
               <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
               <Text style={styles.menuText}>Add Activity</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.menuItem} 
-              onPress={() => {
-                toggleAddMenu(); // Close the add menu
-                navigation.navigate("NewPostScreen"); // Navigate to NewPostScreen
-              }}
-            >
+            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Add Post")}>
               <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
               <Text style={styles.menuText}>Add Post</Text>
             </TouchableOpacity>
