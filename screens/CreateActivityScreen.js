@@ -443,17 +443,18 @@ const CreateActivityScreen = () => {
         )}
         {/* Submit Button */}
         <TouchableOpacity
-          style={{
-            padding: 15,
-            backgroundColor: '#7A40F8',
-            borderRadius: 8,
-            alignItems: 'center',
-            marginTop: 30,
-          }}
-          onPress={handleSubmit}
-        >
-          <Text style={{ color: '#fff' }}>Create Activity</Text>
-        </TouchableOpacity>
+  style={{
+    padding: 15,
+    backgroundColor: '#7A40F8',
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 30,
+  }}
+  onPress={() => navigation.navigate('BusinessInfoScreen')}
+>
+  <Text style={{ color: '#fff' }}>Create Activity</Text>
+</TouchableOpacity>
+
       </View>
     </ScrollView>
   );

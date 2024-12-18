@@ -1,3 +1,4 @@
+import React, { useContext, useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -7,8 +8,8 @@ import {
   Platform,
   Image,
   Text,
+  ScrollView,
 } from "react-native";
-import React, { useContext, useState, useCallback } from "react";
 import { GlobalStyles } from "../constants/Styles";
 import Button from "../components/Button";
 import InputField from "../components/InputField";
@@ -17,7 +18,7 @@ import { AuthContext } from "../store/auth-context";
 import ProgressOverlay from "../components/ProgressOverlay";
 import ErrorOverlay from "../components/ErrorOverlay";
 import { StatusBar } from "expo-status-bar";
-import * as ImagePicker from 'expo-image-picker'; // Import the required library
+import * as ImagePicker from "expo-image-picker";
 
 const { width, height } = Dimensions.get("window");
 
@@ -26,6 +27,10 @@ function NewPostScreen({ navigation }) {
   const [type, setType] = useState();
   const [post, setPost] = useState(null);
   const [caption, setCaption] = useState("");
+  const [hashtags, setHashtags] = useState("");
+  const [location, setLocation] = useState("");
+  const [privacy, setPrivacy] = useState("public");
+  const [audio, setAudio] = useState(null);
   const [uploading, setUploading] = useState({
     status: false,
     progress: 0,
@@ -37,6 +42,16 @@ function NewPostScreen({ navigation }) {
       const formData = new FormData();
       formData.append("userId", authCtx.userData._id);
       formData.append("description", caption);
+      formData.append("hashtags", hashtags);
+      formData.append("location", location);
+      formData.append("privacy", privacy);
+      if (audio) {
+        formData.append("audio", {
+          uri: audio.uri,
+          type: audio.type,
+          name: audio.fileName,
+        });
+      }
       formData.append("picture", {
         uri: post.uri,
         type: post.type,
@@ -49,10 +64,9 @@ function NewPostScreen({ navigation }) {
           status: true,
         }));
 
-        // Simulate an upload delay for demonstration
         setTimeout(() => {
           setUploading({ status: false, progress: 0, success: true });
-          navigation.goBack(); // Navigate back after upload
+          navigation.goBack();
         }, 3000);
       } catch (error) {
         setUploading((prevData) => ({
@@ -62,38 +76,73 @@ function NewPostScreen({ navigation }) {
         console.log(error.message);
       }
     }
-  }, [authCtx.userData._id, caption, post, navigation]);
+  }, [authCtx.userData._id, caption, hashtags, location, privacy, audio, post, navigation]);
 
   const openImagePicker = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        alert("Permission to access camera roll is required!");
+        return;
+      }
 
-    if (result.cancelled) {
-      console.log("User cancelled image picker");
-    } else if (result.error) {
-      console.error("Image picker error:", result.error);
-    } else {
-      setPost(result);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      console.log("Full picker result:", result);
+      
+      if (!result.canceled) {
+        // In newer versions of expo-image-picker, the image URI is in result.assets[0]
+        const imageUri = result.assets ? result.assets[0].uri : result.uri;
+        console.log("Image URI:", imageUri);
+        
+        setPost({
+          uri: imageUri,
+          type: 'image/jpeg',
+          fileName: 'photo.jpg'
+        });
+      }
+    } catch (error) {
+      console.log("Image picker error:", error);
+      alert("Error picking image");
     }
   };
 
   const openCamera = async () => {
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        alert("Permission to access camera is required!");
+        return;
+      }
 
-    if (result.cancelled) {
-      console.log("User cancelled camera picker");
-    } else if (result.error) {
-      console.error("Camera picker error:", result.error);
-    } else {
-      setPost(result);
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      console.log("Camera result:", result);
+
+      if (!result.canceled) {
+        const imageUri = result.assets ? result.assets[0].uri : result.uri;
+        console.log("Camera image URI:", imageUri);
+        
+        setPost({
+          uri: imageUri,
+          type: 'image/jpeg',
+          fileName: 'photo.jpg'
+        });
+      }
+    } catch (error) {
+      console.log("Camera error:", error);
+      alert("Error taking photo");
     }
   };
 
@@ -106,40 +155,124 @@ function NewPostScreen({ navigation }) {
       <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
         <Ionicons name="arrow-back-outline" size={30} color="white" />
       </Pressable>
+
       {!post ? (
         <View style={styles.buttonContainer}>
-          <Pressable onPress={openImagePicker} style={styles.uploadIcon}>
+          <Pressable
+            onPress={openImagePicker}
+            style={[styles.uploadIcon, styles.lightPurple]}
+          >
             <Ionicons name="image-outline" size={50} color="white" />
             <Text style={styles.uploadText}>Upload</Text>
           </Pressable>
-          <Pressable onPress={openCamera} style={styles.uploadIcon}>
+          <Pressable
+            onPress={openCamera}
+            style={[styles.uploadIcon, styles.lightPurple]}
+          >
             <Ionicons name="camera-outline" size={50} color="white" />
             <Text style={styles.uploadText}>Camera</Text>
           </Pressable>
         </View>
       ) : (
-        <View style={styles.previewContainer}>
-          <Image
-            source={{ uri: post.uri }}
-            style={styles.imagePreview}
-          />
-          <Pressable style={styles.resizeButton} onPress={() => setPost(null)}>
-            <Ionicons name="close-outline" size={30} color="white" />
-          </Pressable>
-          <InputField placeholder="What's on your mind?" multiline={true} onChangeText={setCaption} value={caption} />
-        </View>
+        <ScrollView style={styles.scrollContainer}>
+          <View style={styles.previewContainer}>
+            {/* Image Container */}
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: post.uri }}
+                style={styles.imagePreview}
+                resizeMode="contain"
+                onError={(error) => console.log("Image loading error:", error)}
+              />
+              <Pressable
+                style={styles.resizeButton}
+                onPress={() => setPost(null)}
+              >
+                <Ionicons name="close-outline" size={30} color="white" />
+              </Pressable>
+            </View>
+
+            {/* Input Fields Container */}
+            <View style={styles.inputContainer}>
+              <InputField
+                placeholder="What's on your mind?"
+                multiline={true}
+                onChangeText={setCaption}
+                value={caption}
+              />
+              <InputField
+                placeholder="Hashtags"
+                onChangeText={setHashtags}
+                value={hashtags}
+              />
+              <InputField
+                placeholder="Location"
+                onChangeText={setLocation}
+                value={location}
+              />
+
+              <View style={styles.privacyContainer}>
+                <Text style={styles.privacyLabel}>Privacy:</Text>
+                <Pressable onPress={() => setPrivacy("public")}>
+                  <Text
+                    style={[
+                      styles.privacyOption,
+                      privacy === "public" && styles.activePrivacy,
+                    ]}
+                  >
+                    Public
+                  </Text>
+                </Pressable>
+                <Pressable onPress={() => setPrivacy("private")}>
+                  <Text
+                    style={[
+                      styles.privacyOption,
+                      privacy === "private" && styles.activePrivacy,
+                    ]}
+                  >
+                    Private
+                  </Text>
+                </Pressable>
+                <Pressable onPress={() => setPrivacy("draft")}>
+                  <Text
+                    style={[
+                      styles.privacyOption,
+                      privacy === "draft" && styles.activePrivacy,
+                    ]}
+                  >
+                    Draft
+                  </Text>
+                </Pressable>
+              </View>
+
+              <View style={styles.audioContainer}>
+                <Button
+                  title="Choose Audio"
+                  onPress={() => {
+                    /* Logic for choosing audio */
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.postButtonContainer}>
+            <Button title="Post" onPress={newPostHandler} />
+          </View>
+        </ScrollView>
       )}
-      {post && (
-        <View style={{ padding: 20 }}>
-          <Button title={"Post"} onPress={newPostHandler} />
-        </View>
-      )}
+
       {uploading.status && (
         <>
           {uploading.success ? (
             <ProgressOverlay title={"Uploading"} progress={uploading.progress} />
           ) : (
-            <ErrorOverlay message={"Uploading Failed"} onClose={() => setUploading({ status: false, progress: 0, success: true })} />
+            <ErrorOverlay
+              message={"Uploading Failed"}
+              onClose={() =>
+                setUploading({ status: false, progress: 0, success: true })
+              }
+            />
           )}
         </>
       )}
@@ -147,12 +280,14 @@ function NewPostScreen({ navigation }) {
   );
 }
 
-export default NewPostScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: GlobalStyles.colors.primary,
+  },
+  scrollContainer: {
+    flex: 1,
+    marginTop: 80,
   },
   backButton: {
     position: "absolute",
@@ -161,6 +296,7 @@ const styles = StyleSheet.create({
     padding: 5,
     backgroundColor: GlobalStyles.colors.primary,
     borderRadius: 5,
+    zIndex: 1,
   },
   buttonContainer: {
     flex: 1,
@@ -171,8 +307,10 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     padding: 20,
     borderRadius: 10,
-    backgroundColor: GlobalStyles.colors.lightpurple,
     alignItems: "center",
+  },
+  lightPurple: {
+    backgroundColor: GlobalStyles.colors.lightpurple,
   },
   uploadText: {
     marginTop: 5,
@@ -180,21 +318,61 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    width: "100%",
+  },
+  imageContainer: {
+    width: "100%",
+    height: 300,
+    marginBottom: 20,
+    backgroundColor: '#1a1a1a', // Debug background
+    overflow: 'hidden',
   },
   imagePreview: {
     width: "100%",
-    height: height / 2,
-    borderRadius: 20,
-    overflow: "hidden",
+    height: "100%",
+    backgroundColor: '#2a2a2a', // Debug background
+  },
+  inputContainer: {
+    width: "100%",
+    paddingHorizontal: 20,
   },
   resizeButton: {
     position: "absolute",
     top: 10,
     right: 10,
-    backgroundColor: "black",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
     borderRadius: 30,
     padding: 5,
+    zIndex: 1,
+  },
+  privacyContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 15,
+  },
+  privacyLabel: {
+    color: "white",
+    marginRight: 10,
+  },
+  privacyOption: {
+    color: "white",
+    marginHorizontal: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  activePrivacy: {
+    backgroundColor: GlobalStyles.colors.purple,
+    fontWeight: "bold",
+  },
+  audioContainer: {
+    marginVertical: 10,
+  },
+  postButtonContainer: {
+    padding: 20,
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
   },
 });
+
+export default NewPostScreen;

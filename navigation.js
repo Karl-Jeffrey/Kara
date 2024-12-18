@@ -31,6 +31,7 @@ import LikedPostsScreen from "./screens/LikedPostsScreen";
 import FilterScreen from "./screens/FilterScreen";
 import PostDetailScreen from "./screens/PostDetailScreen";
 import CreateActivityScreen from "./screens/CreateActivityScreen";
+import BusinessInfoScreen from "./screens/BusinessInfoScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -104,9 +105,18 @@ export const SignedInStack = () => {
           <Stack.Screen name="NewPostScreen" component={NewPostScreen} />
           <Stack.Screen name="AddStoryScreen" component={AddStoryScreen} />
           <Stack.Screen name="ChatScreen" component={ChatScreen} />
-          <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-          <Stack.Screen name="NotificationsScreen" component={NotificationsScreen} />
-          <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
+          <Stack.Screen
+            name="EditProfileScreen"
+            component={EditProfileScreen}
+          />
+          <Stack.Screen
+            name="NotificationsScreen"
+            component={NotificationsScreen}
+          />
+          <Stack.Screen
+            name="UserProfileScreen"
+            component={UserProfileScreen}
+          />
           <Stack.Screen
             name="LikedActivitiesScreen"
             component={LikedActivitiesScreen}
@@ -116,7 +126,11 @@ export const SignedInStack = () => {
           <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
           <Stack.Screen name="ViewStoryScreen" component={ViewStoryScreen} />
           <Stack.Screen name="PostDetailScreen" component={PostDetailScreen} />
-          <Stack.Screen name="CreateActivityScreen" component={CreateActivityScreen} />
+          <Stack.Screen
+            name="CreateActivityScreen"
+            component={CreateActivityScreen}
+          />
+          <Stack.Screen name="BusinessInfoScreen" component={BusinessInfoScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AppContextProvider>

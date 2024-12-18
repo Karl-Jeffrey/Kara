@@ -1,16 +1,9 @@
 import React, { useState } from "react";
-import {
-  Text,
-  View,
-  StyleSheet,
-  Image,
-  Pressable,
-  Modal,
-  TouchableOpacity,
-} from "react-native";
+import { Text, View, StyleSheet, Image, Pressable, Modal, TouchableOpacity } from "react-native";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
-import { GlobalStyles, DEFAULT_DP } from "../../../constants/Styles";
+import { GlobalStyles } from "../../../constants/Styles";
 import PressEffect from "../../UI/PressEffect";
+import { useNavigation } from "@react-navigation/native";
 
 const Header = ({ navigation }) => {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -21,47 +14,30 @@ const Header = ({ navigation }) => {
 
   return (
     <View style={[styles.container]}>
-      <Pressable
-        onPress={toggleAddMenu}
-        style={{ position: "absolute", left: 0 }}
-      >
+      {/* Profile Picture Button */}
+      <Pressable onPress={toggleAddMenu} style={{ position: "absolute", left: 0 }}>
         <PressEffect>
           <Image
             style={{ width: 30, height: 30, borderRadius: 50 }}
-            source={{
-              uri: "https://p16.tiktokcdn.com/tos-maliva-avt-0068/2f134ee6b5d3a1340aeb0337beb48f2d~c5_720x720.jpeg",
-            }}
+            source={{ uri: "https://p16.tiktokcdn.com/tos-maliva-avt-0068/2f134ee6b5d3a1340aeb0337beb48f2d~c5_720x720.jpeg" }}
           />
         </PressEffect>
       </Pressable>
 
+      {/* App Title */}
       <View style={{ alignItems: "center" }}>
-        <Text style={{ color: "white", fontSize: 30, fontWeight: "bold" }}>
-          Social
-        </Text>
-        <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 15 }}>
-          Welcome To Social
-        </Text>
+        <Text style={{ color: "white", fontSize: 30, fontWeight: "bold" }}>Kara</Text>
       </View>
 
+      {/* Icons on the Right */}
       <View style={styles.iconsContainer}>
         <PressEffect>
-          <Pressable
-            style={styles.icon}
-            onPress={() => {
-              navigation.navigate("SearchScreen");
-            }}
-          >
+          <Pressable style={styles.icon} onPress={() => navigation.navigate("SearchScreen")}>
             <MaterialIcons name="person-add" size={25} color={"white"} />
           </Pressable>
         </PressEffect>
         <PressEffect>
-          <Pressable
-            style={styles.icon}
-            onPress={() => {
-              navigation.navigate("NotificationsScreen");
-            }}
-          >
+          <Pressable style={styles.icon} onPress={() => navigation.navigate("NotificationsScreen")}>
             <MaterialIcons name="notifications" size={25} color={"white"} />
             <View style={styles.unreadBadge} />
           </Pressable>
@@ -73,118 +49,70 @@ const Header = ({ navigation }) => {
         </PressEffect>
       </View>
 
-      {/* Dropdown Menu for Add Options */}
+      {/* Add Options Menu */}
       <Modal transparent={true} visible={addMenuVisible} animationType="fade">
         <TouchableOpacity style={styles.overlay} onPress={toggleAddMenu}>
           <View style={styles.dropdownMenu}>
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => console.log("Add Activity")}
+              onPress={() => {
+                toggleAddMenu();
+                navigation.navigate("CreateActivityScreen");
+              }}
             >
-              <Ionicons
-                name="add-circle-outline"
-                size={24}
-                color={GlobalStyles.colors.purple}
-              />
+              <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
               <Text style={styles.menuText}>Add Activity</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
-                toggleAddMenu(); // Close the add menu
-                navigation.navigate("NewPostScreen"); // Navigate to NewPostScreen
+                toggleAddMenu();
+                navigation.navigate("NewPostScreen");
               }}
             >
-              <Ionicons
-                name="add-circle-outline"
-                size={24}
-                color={GlobalStyles.colors.purple}
-              />
+              <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
               <Text style={styles.menuText}>Add Post</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => console.log("Add Story")}
+              onPress={() => {
+                toggleAddMenu();
+                console.log("Add Story");
+              }}
             >
-              <Ionicons
-                name="add-circle-outline"
-                size={24}
-                color={GlobalStyles.colors.purple}
-              />
+              <Ionicons name="add-circle-outline" size={24} color={GlobalStyles.colors.purple} />
               <Text style={styles.menuText}>Add Story</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
 
-      {/* Dropdown Menu for Account Options */}
+      {/* Account Options Menu */}
       <Modal transparent={true} visible={menuVisible} animationType="fade">
         <TouchableOpacity style={styles.overlay} onPress={toggleMenu}>
           <View style={styles.dropdownMenu}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => console.log("My profile")}
-            >
-              <MaterialIcons
-                name="account-circle"
-                size={24}
-                color={GlobalStyles.colors.primary}
-              />
+            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("My profile")}>
+              <MaterialIcons name="account-circle" size={24} color={GlobalStyles.colors.primary} />
               <Text style={styles.menuText}>My profile</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => console.log("Edit profile")}
-            >
-              <MaterialIcons
-                name="edit"
-                size={24}
-                color={GlobalStyles.colors.primary}
-              />
+            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Edit profile")}>
+              <MaterialIcons name="edit" size={24} color={GlobalStyles.colors.primary} />
               <Text style={styles.menuText}>Edit profile</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => console.log("Inbox")}
-            >
-              <MaterialIcons
-                name="inbox"
-                size={24}
-                color={GlobalStyles.colors.primary}
-              />
+            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Inbox")}>
+              <MaterialIcons name="inbox" size={24} color={GlobalStyles.colors.primary} />
               <Text style={styles.menuText}>Inbox</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => console.log("Settings")}
-            >
-              <MaterialIcons
-                name="settings"
-                size={24}
-                color={GlobalStyles.colors.primary}
-              />
-              <Text style={styles.menuText}>Setting</Text>
+            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Settings")}>
+              <MaterialIcons name="settings" size={24} color={GlobalStyles.colors.primary} />
+              <Text style={styles.menuText}>Settings</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => console.log("Help")}
-            >
-              <MaterialIcons
-                name="help"
-                size={24}
-                color={GlobalStyles.colors.primary}
-              />
+            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Help")}>
+              <MaterialIcons name="help" size={24} color={GlobalStyles.colors.primary} />
               <Text style={styles.menuText}>Help</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => console.log("Logout")}
-            >
-              <MaterialIcons
-                name="logout"
-                size={24}
-                color={GlobalStyles.colors.primary}
-              />
+            <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Logout")}>
+              <MaterialIcons name="logout" size={24} color={GlobalStyles.colors.primary} />
               <Text style={styles.menuText}>Logout</Text>
             </TouchableOpacity>
           </View>
@@ -220,8 +148,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
   },
   overlay: {
     flex: 1,
@@ -244,17 +170,12 @@ const styles = StyleSheet.create({
   menuItem: {
     paddingVertical: 10,
     width: "100%",
-    alignItems: "center",
     flexDirection: "row",
     alignItems: "center",
-  },
-  menuIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
   },
   menuText: {
     color: GlobalStyles.colors.purple,
     fontSize: 16,
+    marginLeft: 10,
   },
 });
