@@ -1,45 +1,51 @@
-import { View, Text, TextInput, StyleSheet, Alert } from "react-native";
+import { View, Text, Alert, StyleSheet } from "react-native";
 import React from "react";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Formik } from "formik";
 import * as yup from "yup";
 import Validator from "email-validator";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, firestore } from "../../firebase"; // Ensure firebase.js is properly set up
+import { collection, addDoc } from "firebase/firestore";
 
-import validateEmail from "../../utils/validateEmail";
-import Button from "../Button";
 import InputField from "../InputField";
 import { GlobalStyles } from "../../constants/Styles";
 
 const SignupForm = ({ navigation }) => {
   const SignupFormSchema = yup.object().shape({
     email: yup.string().email().required("Email address is required."),
-    password: yup.string().min(8, "Password must have a tleast 8 chracters."),
+    password: yup.string().min(8, "Password must have at least 8 characters."),
     username: yup
       .string()
-      .required()
-      .min(2, "Username must contain at least 2 chracters."),
+      .required("Username is required.")
+      .min(2, "Username must contain at least 2 characters."),
+    fullname: yup.string().required("Full Name is required."),
   });
 
   const onSignup = async (email, password, username, fullname) => {
     try {
-      const isEmailValid = await validateEmail(email);
-      if (!isEmailValid) {
-        Alert.alert("Invalid Email", "Please enter a valid email!");
-        return;
-      }
-      const formData = {
+      // Create a new user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save the user details in Firestore with an auto-generated document ID
+      await addDoc(collection(firestore, "users"), {
+        userId: user.uid,
         fullName: fullname,
         username: username,
         email: email,
-        password: password,
-        picturePath: "",
+        profilePicture: "",
         friends: [],
         occupation: "",
         bio: "Edit Bio",
-      };
+        createdAt: new Date(),
+      });
+
+      Alert.alert("Success", "Account created successfully!");
       navigation.replace("LoginScreen");
     } catch (error) {
-      console.log("catch:", error.response.data);
+      console.error("Error during signup:", error.message);
+      Alert.alert("Signup Failed", error.message);
     }
   };
 
@@ -48,23 +54,11 @@ const SignupForm = ({ navigation }) => {
       <Formik
         initialValues={{ fullname: "", username: "", email: "", password: "" }}
         onSubmit={(values) => {
-          onSignup(
-            values.email,
-            values.password,
-            values.username,
-            values.fullname
-          );
+          onSignup(values.email, values.password, values.username, values.fullname);
         }}
         validationSchema={SignupFormSchema}
       >
-        {({
-          handleChange,
-          handleBlur,
-          handleSubmit,
-          values,
-          isValid,
-          errors,
-        }) => (
+        {({ handleChange, handleBlur, handleSubmit, values, isValid }) => (
           <>
             <InputField
               placeholder="Full Name"
@@ -73,9 +67,6 @@ const SignupForm = ({ navigation }) => {
               onChangeText={handleChange("fullname")}
               onBlur={handleBlur("fullname")}
               value={values.fullname}
-              inValid={
-                values.fullname.length === 0 || values.fullname.length > 1
-              }
               containerStyle={{ margin: 10, borderRadius: 6 }}
             />
             <InputField
@@ -85,9 +76,6 @@ const SignupForm = ({ navigation }) => {
               onChangeText={handleChange("username")}
               onBlur={handleBlur("username")}
               value={values.username}
-              inValid={
-                values.username.length === 0 || values.username.length > 1
-              }
               containerStyle={{ margin: 10, borderRadius: 6 }}
             />
             <InputField
@@ -97,9 +85,6 @@ const SignupForm = ({ navigation }) => {
               onChangeText={handleChange("email")}
               onBlur={handleBlur("email")}
               value={values.email}
-              inValid={
-                values.email.length < 1 || Validator.validate(values.email)
-              }
               containerStyle={{ margin: 10, borderRadius: 6 }}
             />
             <InputField
@@ -109,34 +94,26 @@ const SignupForm = ({ navigation }) => {
               onChangeText={handleChange("password")}
               onBlur={handleBlur("password")}
               value={values.password}
-              inValid={
-                values.password.length === 0 || values.password.length > 7
-              }
               containerStyle={{ margin: 10, borderRadius: 6 }}
             />
- <View style={{ margin: 10, marginBottom: 0 }}>
-              {/* TouchableOpacity for more control */}
+            <View style={{ margin: 10, marginBottom: 0 }}>
               <TouchableOpacity
                 style={{
-                  backgroundColor:  GlobalStyles.colors.blue,
+                  backgroundColor: GlobalStyles.colors.blue,
                   paddingVertical: 12,
-                  borderRadius: 6, // Square corners
+                  borderRadius: 6,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
                 onPress={handleSubmit}
                 disabled={!isValid}
               >
-                <Text style={{ color: "white", fontSize: 18 }}>Log in</Text>
+                <Text style={{ color: "white", fontSize: 18 }}>Sign Up</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.signupContainer}>
-              <Text style={{ color: GlobalStyles.colors.gray }}>
-                Already have an account?
-              </Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("LoginScreen")}
-              >
+              <Text style={{ color: GlobalStyles.colors.gray }}>Already have an account?</Text>
+              <TouchableOpacity onPress={() => navigation.navigate("LoginScreen")}>
                 <Text style={{ color: "#6BB0F5" }}> Log in</Text>
               </TouchableOpacity>
             </View>
@@ -150,17 +127,7 @@ const SignupForm = ({ navigation }) => {
 export default SignupForm;
 
 const styles = StyleSheet.create({
-  wrapper: {
-    // marginTop: 50,
-  },
-  inputField: {
-    borderRadius: 4,
-    borderColor: "gray",
-    padding: 8,
-    backgroundColor: "FAFAFA",
-    marginBottom: 10,
-    borderWidth: 1,
-  },
+  wrapper: {},
   signupContainer: {
     flexDirection: "row",
     width: "100%",

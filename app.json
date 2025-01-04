@@ -14,7 +14,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -22,11 +24,11 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/noserdivers_logo_iupl55.png",
         "backgroundColor": "#262938"
-      }
+      },
+      "package": "com.kara.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     }
-   
   }
 }
