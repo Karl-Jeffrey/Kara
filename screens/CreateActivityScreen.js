@@ -11,13 +11,17 @@ import {
 import { GlobalStyles } from "../constants/Styles";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import { firestore } from "../firebase"; // Import Firestore instance
-import { collection, addDoc } from "firebase/firestore";
+import { firestore, storage } from "../firebase"; // Import Firestore and Storage
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const CreateActivityScreen = () => {
   const navigation = useNavigation();
 
-  // State for input fields
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
@@ -28,50 +32,80 @@ const CreateActivityScreen = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
 
   const handleImagePicker = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      setImage(result.uri);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri); // Ensure we get a valid URI
+      } else {
+        setImage(null); // Handle the case where no image is selected
+      }
+    } catch (error) {
+      console.error("Error picking image:", error.message);
     }
   };
 
-  const handleCategorySelection = (category) => {
-    setSelectedCategories((prevCategories) => {
-      if (prevCategories.includes(category)) {
-        return prevCategories.filter((item) => item !== category);
-      } else {
-        return [...prevCategories, category];
+  const uploadImage = async (uri) => {
+    if (!uri) {
+      return ""; // Return an empty string if no image is selected
+    }
+
+    try {
+      // Use Expo FileSystem to get the file
+      const fileName = uri.split("/").pop();
+      const response = await fetch(uri);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch image for upload");
       }
-    });
+
+      const blob = await response.blob();
+      const imageRef = ref(storage, `activities/${fileName}`);
+      await uploadBytes(imageRef, blob);
+      const downloadURL = await getDownloadURL(imageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image:", error.message);
+      throw error;
+    }
   };
 
   const handleSubmit = async () => {
+    if (!title || !description || !date || !location) {
+      Alert.alert("Error", "Please fill in all required fields.");
+      return;
+    }
+
     try {
-      // Save activity data to Firestore
-      const newActivity = {
+      let imageURL = "";
+
+      if (image) {
+        imageURL = await uploadImage(image);
+      }
+
+      const activityData = {
         title,
         description,
         date,
         location,
         privacy,
-        hashtags: hashtags.split(","), // Convert hashtags to an array
-        image,
-        categories: selectedCategories,
-        createdAt: new Date(),
+        hashtags,
+        image: imageURL,
+        categories: selectedCategories.length ? selectedCategories : ["General"],
+        createdAt: serverTimestamp(),
       };
 
-      const docRef = await addDoc(collection(firestore, "activities"), newActivity);
-      console.log("Document written with ID: ", docRef.id);
+      await addDoc(collection(firestore, "activities"), activityData);
 
       Alert.alert("Success", "Activity created successfully!");
       navigation.goBack();
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error creating activity:", error.message);
       Alert.alert("Error", "Failed to create activity. Please try again.");
     }
   };
