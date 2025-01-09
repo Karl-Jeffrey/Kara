@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { GlobalStyles } from "../constants/Styles";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { firestore } from "../firebase";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 const categories = [
   {
@@ -81,23 +81,8 @@ const FilterScreen = () => {
   const [selectedFilters, setSelectedFilters] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
-  const [databaseFilters, setDatabaseFilters] = useState([]);
+  const [filteredResults, setFilteredResults] = useState([]);
   const navigation = useNavigation();
-
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(firestore, "filters"));
-        const filters = querySnapshot.docs.map((doc) => doc.data());
-        setDatabaseFilters(filters);
-      } catch (error) {
-        console.error("Error fetching filters:", error.message);
-        Alert.alert("Error", "Failed to fetch filters from the database.");
-      }
-    };
-
-    fetchFilters();
-  }, []);
 
   const handleTilePress = (category) => {
     setCurrentCategory(category);
@@ -111,16 +96,40 @@ const FilterScreen = () => {
     }));
   };
 
-  const handleSaveFilters = async () => {
+  const handleApplyFilters = async () => {
     try {
-      await addDoc(collection(firestore, "filters"), {
-        filters: selectedFilters,
-        timestamp: new Date(),
-      });
-      Alert.alert("Success", "Filters saved successfully!");
+      const filters = Object.entries(selectedFilters).filter(
+        ([_, value]) => value !== null
+      );
+
+      if (filters.length === 0) {
+        Alert.alert("No Filters Selected", "Please select at least one filter.");
+        return;
+      }
+
+      const baseQuery = collection(firestore, "activities");
+      const filterQueries = filters.map(([key, value]) =>
+        where(key, "==", value)
+      );
+
+      const finalQuery = query(baseQuery, ...filterQueries);
+
+      const querySnapshot = await getDocs(finalQuery);
+      const results = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setFilteredResults(results);
+
+      if (results.length === 0) {
+        Alert.alert("No Results", "No activities matched your filters.");
+      } else {
+        Alert.alert("Success", `${results.length} activities found.`);
+      }
     } catch (error) {
-      console.error("Error saving filters:", error.message);
-      Alert.alert("Error", "Failed to save filters. Please try again.");
+      console.error("Error fetching filtered results:", error.message);
+      Alert.alert("Error", "Failed to fetch filtered activities.");
     }
   };
 
@@ -177,19 +186,22 @@ const FilterScreen = () => {
         <View style={styles.tileContainer}>
           {categories.map(renderCategoryTile)}
         </View>
-        <Pressable
-          style={styles.applyButton}
-          onPress={() => {
-            console.log("Applied Filters:", selectedFilters);
-            handleSaveFilters();
-            navigation.goBack();
-          }}
-        >
+        <Pressable style={styles.applyButton} onPress={handleApplyFilters}>
           <Text style={styles.applyButtonText}>Apply Filters</Text>
         </Pressable>
+        {filteredResults.length > 0 && (
+          <View style={styles.resultsContainer}>
+            <Text style={styles.resultsHeader}>Filtered Results:</Text>
+            {filteredResults.map((result) => (
+              <View key={result.id} style={styles.resultItem}>
+                <Text style={styles.resultText}>{result.title}</Text>
+                <Text style={styles.resultText}>{result.description}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Modal for Subfilters */}
       <Modal
         transparent
         visible={modalVisible}
@@ -262,6 +274,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  resultsContainer: {
+    marginTop: 20,
+  },
+  resultsHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 10,
+  },
+  resultItem: {
+    padding: 10,
+    backgroundColor: GlobalStyles.colors.primary200,
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  resultText: {
+    color: "white",
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
@@ -307,4 +337,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-}); //n
+});
