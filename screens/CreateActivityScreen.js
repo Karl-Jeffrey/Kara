@@ -11,26 +11,24 @@ import {
 import { GlobalStyles } from "../constants/Styles";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import { firestore, storage } from "../firebase"; // Import Firestore and Storage
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import { firestore, storage } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const CreateActivityScreen = () => {
   const navigation = useNavigation();
 
+  // States
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
-  const [privacy, setPrivacy] = useState("public");
-  const [hashtags, setHashtags] = useState("");
+  const [privacy, setPrivacy] = useState("public"); // Privacy state
+  const [hashtags, setHashtags] = useState(""); // Hashtags state
   const [image, setImage] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
+  // Image picker handler
   const handleImagePicker = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -41,40 +39,37 @@ const CreateActivityScreen = () => {
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImage(result.assets[0].uri); // Ensure we get a valid URI
+        setImage(result.assets[0].uri);
       } else {
-        setImage(null); // Handle the case where no image is selected
+        setImage(null);
       }
     } catch (error) {
       console.error("Error picking image:", error.message);
+      Alert.alert("Error", "Failed to pick image.");
     }
   };
 
+  // Upload image to Firebase Storage
   const uploadImage = async (uri) => {
-    if (!uri) {
-      return ""; // Return an empty string if no image is selected
-    }
+    if (!uri) return ""; // Default to empty if no image is selected
 
     try {
-      // Use Expo FileSystem to get the file
-      const fileName = uri.split("/").pop();
+      const fileName = uri.split("/").pop(); // Extract file name from URI
       const response = await fetch(uri);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch image for upload");
-      }
+      if (!response.ok) throw new Error("Failed to fetch image for upload.");
 
       const blob = await response.blob();
       const imageRef = ref(storage, `activities/${fileName}`);
       await uploadBytes(imageRef, blob);
-      const downloadURL = await getDownloadURL(imageRef);
-      return downloadURL;
+      return await getDownloadURL(imageRef);
     } catch (error) {
       console.error("Error uploading image:", error.message);
-      throw error;
+      return ""; // Return empty on failure
     }
   };
 
+  // Handle activity submission
   const handleSubmit = async () => {
     if (!title || !description || !date || !location) {
       Alert.alert("Error", "Please fill in all required fields.");
@@ -83,9 +78,8 @@ const CreateActivityScreen = () => {
 
     try {
       let imageURL = "";
-
       if (image) {
-        imageURL = await uploadImage(image);
+        imageURL = await uploadImage(image); // Upload image and get URL
       }
 
       const activityData = {
@@ -93,15 +87,14 @@ const CreateActivityScreen = () => {
         description,
         date,
         location,
-        privacy,
+        privacy, // Include privacy field
         hashtags,
-        image: imageURL,
+        imageUrl: imageURL, // Save the image URL to Firestore
         categories: selectedCategories.length ? selectedCategories : ["General"],
         createdAt: serverTimestamp(),
       };
 
-      await addDoc(collection(firestore, "activities"), activityData);
-
+      await addDoc(collection(firestore, "activities"), activityData); // Save data
       Alert.alert("Success", "Activity created successfully!");
       navigation.goBack();
     } catch (error) {
@@ -116,7 +109,6 @@ const CreateActivityScreen = () => {
       contentContainerStyle={{ paddingBottom: 20 }}
     >
       <View style={GlobalStyles.styles.form}>
-        {/* Title Field */}
         <Text style={[GlobalStyles.styles.label, { color: "#fff", marginBottom: 8 }]}>
           Title
         </Text>
@@ -128,10 +120,9 @@ const CreateActivityScreen = () => {
           placeholder="Enter activity title"
           placeholderTextColor="#ccc"
           value={title}
-          onChangeText={(text) => setTitle(text)}
+          onChangeText={setTitle}
         />
 
-        {/* Description Field */}
         <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>
           Description
         </Text>
@@ -143,10 +134,9 @@ const CreateActivityScreen = () => {
           placeholder="Enter activity description"
           placeholderTextColor="#ccc"
           value={description}
-          onChangeText={(text) => setDescription(text)}
+          onChangeText={setDescription}
         />
 
-        {/* Date Field */}
         <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>
           Date
         </Text>
@@ -158,10 +148,9 @@ const CreateActivityScreen = () => {
           placeholder="Enter activity date"
           placeholderTextColor="#ccc"
           value={date}
-          onChangeText={(text) => setDate(text)}
+          onChangeText={setDate}
         />
 
-        {/* Location Field */}
         <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>
           Location
         </Text>
@@ -173,10 +162,9 @@ const CreateActivityScreen = () => {
           placeholder="Enter activity location"
           placeholderTextColor="#ccc"
           value={location}
-          onChangeText={(text) => setLocation(text)}
+          onChangeText={setLocation}
         />
 
-        {/* Privacy Options */}
         <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>
           Privacy
         </Text>
@@ -199,11 +187,10 @@ const CreateActivityScreen = () => {
             ]}
             onPress={() => setPrivacy("private")}
           >
-            <Text style={[GlobalStyles.styles.privacyOptionText, { color: "#fff" }]}>Friends Only</Text>
+            <Text style={[GlobalStyles.styles.privacyOptionText, { color: "#fff" }]}>Private</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Hashtags Field */}
         <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>
           Hashtags
         </Text>
@@ -215,10 +202,9 @@ const CreateActivityScreen = () => {
           placeholder="Enter hashtags (separated by commas)"
           placeholderTextColor="#ccc"
           value={hashtags}
-          onChangeText={(text) => setHashtags(text)}
+          onChangeText={setHashtags}
         />
 
-        {/* Image Picker */}
         <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>
           Select Image
         </Text>
@@ -242,7 +228,6 @@ const CreateActivityScreen = () => {
           />
         )}
 
-        {/* Submit Button */}
         <TouchableOpacity
           style={{
             padding: 15,
