@@ -1,15 +1,15 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React from "react";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import Feed from "./Feed";
 import Video from "./Video";
 import { GlobalStyles } from "../../../constants/Styles";
-import TopTabBar from "./TopTabBar";
+
 const TopTab = createMaterialTopTabNavigator();
-const Body = ({ StoryTranslate }) => {
+
+const Body = ({ StoryTranslate, activities }) => {
   return (
     <TopTab.Navigator
-      //   tabBar={(props) => <TopTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: "white",
         tabBarLabelStyle: {
@@ -40,10 +40,10 @@ const Body = ({ StoryTranslate }) => {
       }}
     >
       <TopTab.Screen name="Feed">
-        {() => <Feed StoryTranslate={StoryTranslate} />}
+        {() => <Feed StoryTranslate={StoryTranslate} activities={activities} />}
       </TopTab.Screen>
       <TopTab.Screen name="What's Hot">
-        {() => <Video StoryTranslate={StoryTranslate} />}
+        {() => <Video StoryTranslate={StoryTranslate} activities={activities} />}
       </TopTab.Screen>
     </TopTab.Navigator>
   );

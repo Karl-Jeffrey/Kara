@@ -82,7 +82,19 @@ app.get("/users", async (req, res) => {
 
 // Create an activity
 app.post("/activity", async (req, res) => {
-  const { activityId, title, description, category, price, maxParticipants, createdBy, isBusinessActivity, businessDetails, location, availability } = req.body;
+  const {
+    activityId, 
+    title,
+    description, 
+    category, 
+    price, 
+    maxParticipants, 
+    createdBy, 
+    isBusinessActivity,
+    businessDetails, 
+    location, 
+    availability,
+      } = req.body;
 
   try {
     // Save activity to Firestore
@@ -106,6 +118,10 @@ app.post("/activity", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+//Route to fetch the activities 
+app.get("/activities", getActivities);
 
 // Export the API
 exports.api = functions.https.onRequest(app);

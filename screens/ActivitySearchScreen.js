@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -14,47 +14,70 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { GlobalStyles } from '../constants/Styles';
 import { StatusBar } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Import Ionicons
+import { Ionicons } from '@expo/vector-icons';
+import { getFirestore, collection, getDocs } from 'firebase/firestore'; // Firebase Firestore imports
+import { firebaseApp } from '../firebaseConfig'; // Your Firebase configuration file
 
 const ActivitySearchScreen = () => {
   const navigation = useNavigation();
-  const [search, setSearch] = React.useState('');
-  const [paddingTop, setPaddingTop] = React.useState(0);
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [search, setSearch] = useState('');
+  const [activities, setActivities] = useState([]); // Store all activities
+  const [filteredActivities, setFilteredActivities] = useState([]); // Store filtered activities
+  const [refreshing, setRefreshing] = useState(false);
 
-  const activities = [
-    {
-      id: '1',
-      name: 'Yoga Class',
-      image: require('../assets/yoga.png'), // Adjust the path to your assets if needed
-      description: 'A relaxing yoga session for all skill levels.'
-    },
-    {
-      id: '2',
-      name: 'Mountain Hiking',
-      image: require('../assets/hiking.png'), // Use a default profile picture if not available
-      description: 'Explore the scenic mountains with a guided hike.'
-    },
-    {
-      id: '3',
-      name: 'Cooking Workshop',
-      image: require('../assets/cooking.png'), // Use a default profile picture if not available
-      description: 'Join a workshop to learn how to cook gourmet dishes.'
+  const db = getFirestore(firebaseApp); // Initialize Firestore
+
+  // Fetch activities from Firestore
+  const fetchActivities = async () => {
+    try {
+      const activitiesCollection = collection(db, 'Activities'); // Reference the 'Activities' collection
+      const activitiesSnapshot = await getDocs(activitiesCollection);
+      const activitiesData = activitiesSnapshot.docs.map((doc) => doc.data());
+      setActivities(activitiesData);
+      setFilteredActivities(activitiesData); // Set initial filtered activities
+    } catch (error) {
+      console.error('Error fetching activities from Firestore:', error);
     }
-  ];
+  };
 
+  // Refresh handler
   const onRefresh = () => {
     setRefreshing(true);
-    // Add logic to refresh the list data here
+    fetchActivities();
     setTimeout(() => {
       setRefreshing(false);
     }, 1000); // Simulate data fetching delay
   };
 
+  // Filter activities based on search input
+  useEffect(() => {
+    if (search.trim() === '') {
+      setFilteredActivities(activities); // Show all activities if search is empty
+    } else {
+      setFilteredActivities(
+        activities.filter((activity) =>
+          activity.title.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+  }, [search, activities]);
+
+  // Fetch activities on component mount
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  // Render activity card
   const renderActivityCard = ({ item }) => (
     <View style={styles.card}>
-      <Image source={item.image} style={styles.image} />
-      <Text style={styles.name}>{item.name}</Text>
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.image} />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.imagePlaceholderText}>No Image</Text>
+        </View>
+      )}
+      <Text style={styles.name}>{item.title}</Text>
       <Text style={styles.description}>{item.description}</Text>
     </View>
   );
@@ -63,7 +86,7 @@ const ActivitySearchScreen = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0} // Adds space above the search bar
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
     >
       <View
         style={{
@@ -91,11 +114,11 @@ const ActivitySearchScreen = () => {
       </View>
 
       <FlatList
-        data={activities}
+        data={filteredActivities}
         renderItem={renderActivityCard}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.activityId}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        contentContainerStyle={{ paddingTop: 60, gap: 20 }} // Adjust paddingTop as needed
+        contentContainerStyle={{ paddingTop: 60, gap: 20 }}
       />
       <Pressable
         style={styles.filterButton}
@@ -113,34 +136,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: GlobalStyles.colors.primary,
-    padding: 20
+    padding: 20,
   },
   inputField: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: GlobalStyles.colors.primary500,
     borderRadius: 50,
     borderWidth: 1,
     borderColor: GlobalStyles.colors.primary500,
     padding: 10,
-    flex: 1 // Ensures the text input takes up all available space
+    flex: 1,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center', // Centers the search bar horizontally
     backgroundColor: GlobalStyles.colors.primary500,
     borderRadius: 50,
     borderWidth: 1,
     borderColor: GlobalStyles.colors.primary500,
-    paddingHorizontal: 20, // Adds horizontal padding to the search bar
-    marginTop: 0, // Centers the search bar at the top
+    paddingHorizontal: 20,
     marginBottom: 20,
-    marginHorizontal: 30
-  },
-  activityList: {
-    flexGrow: 1,
-    gap: 20
+    marginHorizontal: 30,
   },
   card: {
     backgroundColor: GlobalStyles.colors.primary200,
@@ -151,33 +168,42 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
     shadowRadius: 6,
-    elevation: 5
+    elevation: 5,
   },
   image: {
     width: '100%',
     height: 150,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: 150,
+    backgroundColor: GlobalStyles.colors.gray,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    color: 'white',
+    fontSize: 14,
   },
   name: {
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
-    padding: 10
+    padding: 10,
   },
   description: {
     color: GlobalStyles.colors.gray,
-    padding: 10
+    padding: 10,
   },
   filterButton: {
     backgroundColor: GlobalStyles.colors.blue,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 5,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   filterButtonText: {
     color: 'white',
-    fontSize: 16
-  }
+    fontSize: 16,
+  },
 });

@@ -40,3 +40,15 @@ exports.createActivity = async (data) => {
     throw error;
   }
 };
+
+// Get all activities
+exports.getActivities = async (req, res) => {
+  try {
+    const activitiesSnapshot = await admin.firestore().collection("Activities").get();
+    const activities = activitiesSnapshot.docs.map((doc) => doc.data());
+    res.status(200).json(activities); // Send the activities as a response
+  } catch (error) {
+    console.error("Error fetching activities:", error.message);
+    res.status(500).json({ error: "Unable to fetch activities" });
+  }
+};

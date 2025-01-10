@@ -1,23 +1,26 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, FlatList, RefreshControl } from "react-native";
 import React from "react";
 import { GlobalStyles } from "../../../constants/Styles";
-import { FlatList, RefreshControl } from "react-native";
-import Post from "./Post";
-import { POSTS } from "../../../data/posts";
+import PostAdvance from "./PostAdvance"; // Assuming you're using PostAdvance for consistency
 import { useSharedValue } from "react-native-reanimated";
 
 // Define a fallback value for CONTAINER_HEIGHT if not provided elsewhere
 const CONTAINER_HEIGHT = 100;
 
-const Video = ({ StoryTranslate }) => {
+const Video = ({ StoryTranslate, activities }) => {
   const lastScrollY = useSharedValue(0);
 
-  const calculateHotness = (post) => {
-    return post.likes.length + post.comments.length;
+  // Calculate "hotness" score for activities
+  const calculateHotness = (activity) => {
+    const likes = activity.likes?.length || 0;
+    const comments = activity.comments?.length || 0;
+    return likes + comments;
   };
 
-  const sortedPosts = [...POSTS].sort((a, b) => calculateHotness(b) - calculateHotness(a));
+  // Sort activities based on hotness
+  const sortedActivities = [...activities].sort((a, b) => calculateHotness(b) - calculateHotness(a));
 
+  // Determine ribbon color based on rank
   const getRibbonColor = (rank) => {
     switch (rank) {
       case 1:
@@ -38,26 +41,24 @@ const Video = ({ StoryTranslate }) => {
         contentContainerStyle={styles.contentContainer}
         onMomentumScrollBegin={(event) => {
           const scrollY = event.nativeEvent.contentOffset.y;
-          if (scrollY > lastScrollY.value) StoryTranslate.value = -CONTAINER_HEIGHT;
-          else StoryTranslate.value = 0;
+          StoryTranslate.value = scrollY > lastScrollY.value ? -CONTAINER_HEIGHT : 0;
         }}
         onMomentumScrollEnd={(event) => {
-          const scrollY = event.nativeEvent.contentOffset.y;
-          lastScrollY.value = scrollY;
+          lastScrollY.value = event.nativeEvent.contentOffset.y;
         }}
-        refreshControl={
-          <RefreshControl refreshing={false} onRefresh={() => {}} />
-        }
-        keyExtractor={(item) => item._id}
-        data={sortedPosts}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={() => {}} />}
+        keyExtractor={(item) => item.activityId}
+        data={sortedActivities}
         renderItem={({ item, index }) => (
           <View style={styles.cardContainer}>
-            <View style={[styles.starBadge, { backgroundColor: getRibbonColor(index + 1) }]}>
+            <View
+              style={[styles.starBadge, { backgroundColor: getRibbonColor(index + 1) }]}
+            >
               <Text style={[styles.starText, index < 3 && styles.whiteText]}>
-                {index === 0 ? "⭐" : index === 1 ? "⭐" : index === 2 ? "⭐" : `${index + 1}`}
+                {index < 3 ? "⭐" : `${index + 1}`}
               </Text>
             </View>
-            <Post post={item} />
+            <PostAdvance post={item} />
           </View>
         )}
       />
@@ -101,12 +102,5 @@ const styles = StyleSheet.create({
   },
   whiteText: {
     color: GlobalStyles.colors.white,
-  },
-  ribbonTail: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    width: "100%",
-    height: 4,
   },
 });
