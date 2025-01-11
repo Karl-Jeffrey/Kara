@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { getFirestore, collection, getDocs, query, orderBy } from "firebase/firestore"; // Firebase Firestore imports
 import VideoPost from "../components/reelsScreen/VideoPost";
 import { GlobalStyles } from "../constants/Styles";
-
+import { firestore } from "../firebase";
 const ITEM_SIZE =
   GlobalStyles.styles.windowHeight - GlobalStyles.styles.tabBarPadding + 25;
 
@@ -13,14 +13,14 @@ const ReelsScreen = () => {
   const [posts, setPosts] = useState([]); // Posts fetched from Firestore
   const ScrollY = useRef(new Animated.Value(0)).current;
 
-  const db = getFirestore(); // Initialize Firestore
+  
 
   // Fetch posts from Firestore
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         const postsQuery = query(
-          collection(db, "posts"), // Reference the "posts" collection
+          collection(firestore, "posts"), // Reference the "posts" collection
           orderBy("createdAt", "desc") // Order posts by creation time
         );
         const postsSnapshot = await getDocs(postsQuery);

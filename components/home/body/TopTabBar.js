@@ -8,8 +8,8 @@ import {
   Text,
   FlatList,
 } from "react-native";
-import { getFirestore, collection, getDocs } from "firebase/firestore"; // Firebase Firestore imports
-import { firebaseApp } from "../firebaseConfig"; // Your Firebase configuration file
+import { collection, getDocs } from "firebase/firestore"; // Firebase Firestore imports
+import { firestore } from "../../../firebase";  // Use shared Firestore instance
 
 const { width } = Dimensions.get("window");
 
@@ -24,13 +24,11 @@ function TopTabBar({ navigation, position }) {
     outputRange: categories.map((_, i) => i * tabWidth),
   });
 
-  const db = getFirestore(firebaseApp); // Initialize Firestore
-
   // Fetch activities from Firestore
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const activitiesCollection = collection(db, "Activities"); // Reference the 'Activities' collection
+        const activitiesCollection = collection(firestore, "Activities"); // Reference the 'Activities' collection
         const activitiesSnapshot = await getDocs(activitiesCollection);
         const activitiesData = activitiesSnapshot.docs.map((doc) => doc.data());
         setActivities(activitiesData);

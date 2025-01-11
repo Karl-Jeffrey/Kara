@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, Image, ActivityIndicator, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import { GlobalStyles } from "../constants/Styles"; // Import GlobalStyles
-import { getFirestore, collection, getDocs, query, where } from "firebase/firestore"; // Firebase Firestore imports
-import { firebaseApp } from "../firebaseConfig"; // Your Firebase configuration file
+import { collection, getDocs, query, where } from "firebase/firestore"; // Firebase Firestore imports
+import { firestore } from "../firebase"; // Use shared Firestore instance
 
 const LikedActivitiesScreen = ({ userId }) => {
   const [likedActivities, setLikedActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const db = getFirestore(firebaseApp); // Initialize Firestore
 
   useEffect(() => {
     const fetchLikedActivities = async () => {
       try {
         // Fetch the "Likes" collection for the current user
         const likesQuery = query(
-          collection(db, "Likes"),
+          collection(firestore, "Likes"),
           where("userId", "==", userId)
         );
         const likesSnapshot = await getDocs(likesQuery);
@@ -23,7 +29,7 @@ const LikedActivitiesScreen = ({ userId }) => {
 
         // Fetch the corresponding activities from the "Activities" collection
         if (likedActivityIds.length > 0) {
-          const activitiesSnapshot = await getDocs(collection(db, "Activities"));
+          const activitiesSnapshot = await getDocs(collection(firestore, "Activities"));
           const activitiesData = activitiesSnapshot.docs
             .map((doc) => doc.data())
             .filter((activity) => likedActivityIds.includes(activity.activityId));

@@ -15,8 +15,8 @@ import { useNavigation } from '@react-navigation/native';
 import { GlobalStyles } from '../constants/Styles';
 import { StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getFirestore, collection, getDocs } from 'firebase/firestore'; // Firebase Firestore imports
-import { firebaseApp } from '../firebaseConfig'; // Your Firebase configuration file
+import { collection, getDocs } from 'firebase/firestore'; // Firebase Firestore imports
+import { firestore } from '../firebase'; // Use shared Firestore instance
 
 const ActivitySearchScreen = () => {
   const navigation = useNavigation();
@@ -25,12 +25,10 @@ const ActivitySearchScreen = () => {
   const [filteredActivities, setFilteredActivities] = useState([]); // Store filtered activities
   const [refreshing, setRefreshing] = useState(false);
 
-  const db = getFirestore(firebaseApp); // Initialize Firestore
-
   // Fetch activities from Firestore
   const fetchActivities = async () => {
     try {
-      const activitiesCollection = collection(db, 'Activities'); // Reference the 'Activities' collection
+      const activitiesCollection = collection(firestore, 'Activities'); // Reference the 'Activities' collection
       const activitiesSnapshot = await getDocs(activitiesCollection);
       const activitiesData = activitiesSnapshot.docs.map((doc) => doc.data());
       setActivities(activitiesData);
