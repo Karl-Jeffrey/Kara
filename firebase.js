@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
+import { getStorage } from "firebase/storage"; // Import Firebase Storage
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Your Firebase Configuration
@@ -8,7 +9,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyA7JcD4ZvfGE16gdH5qgHBPfJvxHouDrwQ",
   authDomain: "kara-ac8b6.firebaseapp.com",
   projectId: "kara-ac8b6",
-  storageBucket: "kara-ac8b6.appspot.com",
+  storageBucket: "kara-ac8b6.appspot.com", // Firebase Storage bucket
   messagingSenderId: "128110989835",
   appId: "1:128110989835:web:16339307ae31b9b521ed0e",
   measurementId: "G-W26CJF93PV",
@@ -19,6 +20,9 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Firestore
 export const firestore = getFirestore(app);
+
+// Initialize Firebase Storage
+export const storage = getStorage(app); // Add this line for Storage
 
 // Initialize Firebase Auth with AsyncStorage persistence
 export const auth =

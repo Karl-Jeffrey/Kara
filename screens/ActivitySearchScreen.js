@@ -9,14 +9,16 @@ import {
   Pressable,
   RefreshControl,
   KeyboardAvoidingView,
-  Platform 
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { GlobalStyles } from '../constants/Styles';
 import { StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, collection, getDocs } from 'firebase/firestore'; // Firebase Firestore imports
-import { firebaseApp } from '../firebaseConfig'; // Your Firebase configuration file
+import { getDownloadURL, ref } from 'firebase/storage'; // Firebase Storage imports
+import { firebaseApp, storage } from '../firebaseConfig'; // Firebase configuration file
 
 const ActivitySearchScreen = () => {
   const navigation = useNavigation();
@@ -24,19 +26,42 @@ const ActivitySearchScreen = () => {
   const [activities, setActivities] = useState([]); // Store all activities
   const [filteredActivities, setFilteredActivities] = useState([]); // Store filtered activities
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const db = getFirestore(firebaseApp); // Initialize Firestore
 
-  // Fetch activities from Firestore
+  // Fetch activities from Firestore and map image URLs
   const fetchActivities = async () => {
     try {
+      setLoading(true); // Start loading
       const activitiesCollection = collection(db, 'Activities'); // Reference the 'Activities' collection
       const activitiesSnapshot = await getDocs(activitiesCollection);
-      const activitiesData = activitiesSnapshot.docs.map((doc) => doc.data());
+
+      const activitiesData = await Promise.all(
+        activitiesSnapshot.docs.map(async (doc) => {
+          const data = doc.data();
+
+          // Fetch the image URL from Firebase Storage
+          let imageUrl = null;
+          if (data.imagePath) {
+            const imageRef = ref(storage, data.imagePath);
+            imageUrl = await getDownloadURL(imageRef);
+          }
+
+          return {
+            id: doc.id,
+            ...data,
+            imageUrl, // Include the resolved image URL
+          };
+        })
+      );
+
       setActivities(activitiesData);
       setFilteredActivities(activitiesData); // Set initial filtered activities
     } catch (error) {
       console.error('Error fetching activities from Firestore:', error);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -82,6 +107,15 @@ const ActivitySearchScreen = () => {
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={GlobalStyles.colors.primary300} />
+        <Text>Loading activities...</Text>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -116,7 +150,7 @@ const ActivitySearchScreen = () => {
       <FlatList
         data={filteredActivities}
         renderItem={renderActivityCard}
-        keyExtractor={(item) => item.activityId}
+        keyExtractor={(item) => item.id} // Use Firestore document ID
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingTop: 60, gap: 20 }}
       />
@@ -205,5 +239,10 @@ const styles = StyleSheet.create({
   filterButtonText: {
     color: 'white',
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
