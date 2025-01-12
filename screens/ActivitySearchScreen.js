@@ -18,7 +18,7 @@ import { StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, collection, getDocs } from 'firebase/firestore'; // Firebase Firestore imports
 import { getDownloadURL, ref } from 'firebase/storage'; // Firebase Storage imports
-import { firebaseApp, storage } from '../firebaseConfig'; // Firebase configuration file
+import { firestore, storage } from '../firebase'; // Firebase configuration file
 
 const ActivitySearchScreen = () => {
   const navigation = useNavigation();
@@ -27,12 +27,12 @@ const ActivitySearchScreen = () => {
   const [filteredActivities, setFilteredActivities] = useState([]); // Store filtered activities
   const [refreshing, setRefreshing] = useState(false);
 
-  const db = getFirestore(firebaseApp); // Initialize Firestore
+  
 
   // Fetch activities from Firestore and map image URLs
   const fetchActivities = async () => {
     try {
-      const activitiesCollection = collection(db, 'Activities'); // Reference the 'Activities' collection
+      const activitiesCollection = collection(firestore, 'Activities'); // Reference the 'Activities' collection
       const activitiesSnapshot = await getDocs(activitiesCollection);
 
       const activitiesData = await Promise.all(

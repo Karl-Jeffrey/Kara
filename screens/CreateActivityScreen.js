@@ -14,6 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import { firestore, storage } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import * as FileSystem from "expo-file-system";
 
 const CreateActivityScreen = () => {
   const navigation = useNavigation();
@@ -40,6 +41,7 @@ const CreateActivityScreen = () => {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImage(result.assets[0].uri);
+        console.log("Selected image URI:", result.assets[0].uri);
       } else {
         setImage(null);
       }
@@ -54,15 +56,21 @@ const CreateActivityScreen = () => {
     if (!uri) return ""; // Default to empty if no image is selected
 
     try {
-      const fileName = uri.split("/").pop(); // Extract file name from URI
-      const response = await fetch(uri);
+      console.log("Uploading image with URI:", uri);
+      const fileName = uri.split("/").pop() || `default_${Date.now()}`;
 
-      if (!response.ok) throw new Error("Failed to fetch image for upload.");
+      // Android-specific URI handling
+      const fileData = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const blob = new Blob([Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0))], { type: "image/jpeg" });
 
-      const blob = await response.blob();
       const imageRef = ref(storage, `activities/${fileName}`);
       await uploadBytes(imageRef, blob);
-      return await getDownloadURL(imageRef);
+
+      const downloadURL = await getDownloadURL(imageRef);
+      console.log("Image uploaded successfully. URL:", downloadURL);
+      return downloadURL;
     } catch (error) {
       console.error("Error uploading image:", error.message);
       return ""; // Return empty on failure
@@ -163,46 +171,6 @@ const CreateActivityScreen = () => {
           placeholderTextColor="#ccc"
           value={location}
           onChangeText={setLocation}
-        />
-
-        <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>
-          Privacy
-        </Text>
-        <View style={GlobalStyles.styles.privacyOptions}>
-          <TouchableOpacity
-            style={[
-              GlobalStyles.styles.privacyOption,
-              privacy === "public" && GlobalStyles.styles.selectedOption,
-              { padding: 10, borderRadius: 8, backgroundColor: privacy === "public" ? "#7A40F8" : "#2B2C3E" },
-            ]}
-            onPress={() => setPrivacy("public")}
-          >
-            <Text style={[GlobalStyles.styles.privacyOptionText, { color: "#fff" }]}>Public</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              GlobalStyles.styles.privacyOption,
-              privacy === "private" && GlobalStyles.styles.selectedOption,
-              { padding: 10, borderRadius: 8, backgroundColor: privacy === "private" ? "#7A40F8" : "#2B2C3E" },
-            ]}
-            onPress={() => setPrivacy("private")}
-          >
-            <Text style={[GlobalStyles.styles.privacyOptionText, { color: "#fff" }]}>Private</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>
-          Hashtags
-        </Text>
-        <TextInput
-          style={[
-            GlobalStyles.styles.input,
-            { fontSize: 18, padding: 15, backgroundColor: "#2B2C3E", color: "#fff", borderRadius: 8 },
-          ]}
-          placeholder="Enter hashtags (separated by commas)"
-          placeholderTextColor="#ccc"
-          value={hashtags}
-          onChangeText={setHashtags}
         />
 
         <Text style={[GlobalStyles.styles.label, { color: "#fff", marginTop: 20, marginBottom: 8 }]}>

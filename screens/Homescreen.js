@@ -15,7 +15,7 @@ import StorySvg from "../components/home/head/StorySvg.js";
 import { StatusBar } from "expo-status-bar";
 import { collection, getDocs } from "firebase/firestore";
 import { getDownloadURL, ref } from "firebase/storage";
-import { db, storage } from "../firebaseConfig.js"; // Ensure Firebase is initialized here
+import { firestore, storage } from "../firebase.js"; // Ensure Firebase is initialized here
 
 const HomeScreen = ({ navigation }) => {
   const [followings, setFollowings] = useState({ data: [], list: [] });
@@ -45,7 +45,7 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "Activities"));
+        const querySnapshot = await getDocs(collection(firestore, "Activities"));
         const activitiesData = await Promise.all(
           querySnapshot.docs.map(async (doc) => {
             const data = doc.data();
