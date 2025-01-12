@@ -18,7 +18,7 @@ import { StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, collection, getDocs } from 'firebase/firestore'; // Firebase Firestore imports
 import { getDownloadURL, ref } from 'firebase/storage'; // Firebase Storage imports
-import { firebaseApp, storage } from '../firebaseConfig'; // Firebase configuration file
+import { firebaseApp, storage } from '../firebase'; // Firebase configuration file
 
 const ActivitySearchScreen = () => {
   const navigation = useNavigation();
@@ -26,6 +26,7 @@ const ActivitySearchScreen = () => {
   const [activities, setActivities] = useState([]); // Store all activities
   const [filteredActivities, setFilteredActivities] = useState([]); // Store filtered activities
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true); // Add loading state
 
   const db = getFirestore(firebaseApp); // Initialize Firestore
 
@@ -42,8 +43,12 @@ const ActivitySearchScreen = () => {
           // Fetch the image URL from Firebase Storage
           let imageUrl = null;
           if (data.imagePath) {
-            const imageRef = ref(storage, data.imagePath);
-            imageUrl = await getDownloadURL(imageRef);
+            try {
+              const imageRef = ref(storage, data.imagePath);
+              imageUrl = await getDownloadURL(imageRef);
+            } catch (error) {
+              console.error('Error fetching image URL:', error.message);
+            }
           }
 
           return {
@@ -106,6 +111,7 @@ const ActivitySearchScreen = () => {
   );
 
   if (loading) {
+    // Display a loading indicator while fetching data
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={GlobalStyles.colors.primary300} />

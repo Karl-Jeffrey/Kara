@@ -13,6 +13,8 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { GlobalStyles } from "../constants/Styles";
+import { db } from "../firebase"; // Import Firebase Firestore instance
+import { doc, updateDoc } from "firebase/firestore";
 
 const { width } = Dimensions.get("window");
 
@@ -21,30 +23,66 @@ const PostDetailScreen = () => {
   const navigation = useNavigation();
   const { post } = route.params;
 
+  const {
+    id,
+    picturePath = "",
+    userPicturePath = "",
+    username = "Unknown User",
+    createdAt = Date.now(),
+    title = "Untitled",
+    tags = [],
+    prices = { amount: "0.00" },
+    location = "Location not available",
+    description = "",
+    likes = [],
+    comments = [],
+    socialMedia = {},
+  } = post || {};
+
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const handleSave = () => {
-    console.log(isFavorite ? "Removed from favorites" : "Added to favorites");
-    setIsFavorite(!isFavorite);
-    // Add logic to toggle favorite state (e.g., update database)
+  const handleSave = async () => {
+    try {
+      if (id) {
+        const postDocRef = doc(db, "posts", id);
+        await updateDoc(postDocRef, {
+          isFavorite: !isFavorite,
+        });
+        setIsFavorite(!isFavorite);
+        console.log(isFavorite ? "Removed from favorites" : "Added to favorites");
+      } else {
+        console.warn("Post ID is missing. Cannot update favorites.");
+      }
+    } catch (error) {
+      console.error("Error updating favorite status:", error.message);
+    }
   };
 
   const openSocialMedia = (platform) => {
     const urls = {
-      facebook: post.socialMedia?.facebook || "https://facebook.com",
-      instagram: post.socialMedia?.instagram || "https://instagram.com",
-      twitter: post.socialMedia?.twitter || "https://twitter.com",
+      facebook: socialMedia.facebook || "https://facebook.com",
+      instagram: socialMedia.instagram || "https://instagram.com",
+      twitter: socialMedia.twitter || "https://twitter.com",
     };
     const url = urls[platform];
     console.log(`Opening ${platform}: ${url}`);
     // In a real app, you'd use Linking.openURL(url)
   };
 
+  if (!post) {
+    return (
+      <View style={styles.screen}>
+        <Text style={{ color: "white", textAlign: "center", marginTop: 20 }}>
+          Post not found.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
-      {/* Post Image */}
       <ImageBackground
-        source={{ uri: post.picturePath }}
+        source={{ uri: picturePath }}
         style={styles.imageBackground}
         imageStyle={{ resizeMode: "cover" }}
       >
@@ -55,60 +93,69 @@ const PostDetailScreen = () => {
           style={styles.gradientOverlay}
         />
         <View style={styles.headerInfo}>
-          <View style={{ flexDirection: "row" }}>
-            <TouchableOpacity
-              style={{ flexDirection: "row" }}
-              onPress={() => {
-                navigation.navigate("UserProfileScreen", {
-                  backWhite: true,
-                  ViewUser: true,
-                });
+          <TouchableOpacity
+            style={{ flexDirection: "row" }}
+            onPress={() => navigation.navigate("UserProfileScreen", { backWhite: true, ViewUser: true })}
+          >
+            <Image
+              source={{
+                uri: userPicturePath || "https://example.com/default-avatar.png",
               }}
-            >
-              <Image
-                source={post.userPicturePath ? { uri: post.userPicturePath } : { uri: "https://t4.ftcdn.net/jpg/02/15/84/43/360_F_215844325_ttX9YiIIyeaR7Ne6EaLLjMAmy4GvPC69.jpg" }}
-                style={styles.userAvatar}
-              />
-              <View style={{ marginLeft: 10 }}>
-                <Text style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>{post.username}</Text>
-                <Text style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: "bold" }}>{new Date(post.createdAt).toLocaleDateString("en-CA")}</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+              style={styles.userAvatar}
+            />
+            <View style={{ marginLeft: 10 }}>
+              <Text style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>{username}</Text>
+              <Text style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: "bold" }}>
+                {new Date(createdAt).toLocaleDateString("en-CA")}
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </ImageBackground>
 
-      {/* Post Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>{post.title}</Text>
+        <Text style={styles.title}>{title}</Text>
         <View style={styles.tagsContainer}>
-          {post.tags.map((tag, index) => (
-            <Text key={index} style={styles.tag}>{tag}</Text>
+          {tags.map((tag, index) => (
+            <Text key={`tag-${index}`} style={styles.tag}>
+              {tag}
+            </Text>
           ))}
         </View>
-        <Text style={styles.price}>${post.prices.amount}</Text>
+        <Text style={styles.price}>${prices.amount}</Text>
         <View style={styles.locationContainer}>
           <Ionicons name="location" size={15} color={GlobalStyles.colors.magenta} />
-          <Text style={styles.location}>{post.location ? post.location : "Location not available"}</Text>
+          <Text style={styles.location}>{location}</Text>
         </View>
-        <Text style={styles.description}>{post.description}</Text>
+        <Text style={styles.description}>{description}</Text>
       </View>
 
-      {/* Post Stats */}
       <View style={styles.statsContainer}>
-        <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={24} color={GlobalStyles.colors.greenLight} style={styles.icon} />
-        <Text style={styles.statsText}>{isFavorite ? "Added to favorites" : `${post.likes.length} likes`}</Text>
-        <Ionicons name="chatbubble-ellipses" size={24} color={GlobalStyles.colors.blue} style={styles.icon} />
-        <Text style={styles.statsText}>{post.comments.length} comments</Text>
+        <Ionicons
+          name={isFavorite ? "heart" : "heart-outline"}
+          size={24}
+          color={GlobalStyles.colors.greenLight}
+          style={styles.icon}
+        />
+        <Text style={styles.statsText}>
+          {isFavorite ? "Added to favorites" : `${likes.length || 0} likes`}
+        </Text>
+        <Ionicons
+          name="chatbubble-ellipses"
+          size={24}
+          color={GlobalStyles.colors.blue}
+          style={styles.icon}
+        />
+        <Text style={styles.statsText}>{comments.length || 0} comments</Text>
       </View>
 
-      {/* Save Button */}
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={20} color="white" />
-        <Text style={styles.saveButtonText}>{isFavorite ? "Remove from Favorite" : "Add to Favorite"}</Text>
+        <Text style={styles.saveButtonText}>
+          {isFavorite ? "Remove from Favorite" : "Add to Favorite"}
+        </Text>
       </TouchableOpacity>
 
-      {/* Social Media Links */}
       <View style={styles.socialMediaContainer}>
         <Text style={styles.socialMediaHeader}>Find us on:</Text>
         <View style={styles.socialMediaButtons}>
@@ -124,21 +171,14 @@ const PostDetailScreen = () => {
         </View>
       </View>
 
-      {/* Images Below Social Media Links */}
       <Text style={styles.seeMoreText}>See more of us</Text>
       <FlatList
         data={[
-          { id: "1", imageUrl: "https://www.lehighvalleygrandprix.com/wp-content/uploads/2018/02/Go_Kart_Speed-1.jpg" },
-          { id: "2", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/9/94/2013_Australian_Open_-_Guillaume_Rufin.jpg" },
-          { id: "3", imageUrl: "https://www.kunstloft.com/wordpress/en_UK/eu/wp-content/uploads/2023/07/Painter-with-landscape-painting.jpg" },
-          { id: "4", imageUrl: "https://visitorinvictoria.ca/wp-content/uploads/2016/09/ranurte-a-CnhYgTenY-unsplash.jpg" },
-          { id: "5", imageUrl: "https://www.villevillemarie.org/wp-content/uploads/2023/06/Parc-des-Clubs_01-scaled.jpeg" },
-          { id: "6", imageUrl: "https://www.capdagde.com/app/uploads/2022/10/AdobeStock-discotheque-1198x800.jpeg" },
-          { id: "7", imageUrl: "https://bigkahunas.com/destin/wp-content/uploads/sites/11/2023/11/Big-Kahunas-Destin-Water-Park-226.jpg" },
-          { id: "8", imageUrl: "https://www.ivazio.com/wp-content/uploads/2022/08/karaoke-3-chanteurs-1-2560x1920.jpg" },
-          { id: "9", imageUrl: "https://www.levelupreality.ca/wp-content/uploads/2024/09/Couple-Playing-Escape-Simulator.webp" },
+          { id: "1", imageUrl: "https://example.com/image1.jpg" },
+          { id: "2", imageUrl: "https://example.com/image2.jpg" },
+          // Add more images here...
         ]}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         numColumns={3}
         renderItem={({ item }) => (
           <View style={styles.card}>

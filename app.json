@@ -18,17 +18,32 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kara.app", 
+      "newArchEnabled": true, 
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app requires access to your photo library to allow uploading of photos.",
+        "NSCameraUsageDescription": "This app requires access to your camera to allow capturing of photos.",
+        "NSLocationWhenInUseUsageDescription": "This app requires access to your location to enhance your experience."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/noserdivers_logo_iupl55.png",
         "backgroundColor": "#262938"
       },
-      "package": "com.kara.app"
+      "package": "com.kara.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "newArchEnabled": true // Enable React Native New Architecture
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "description": "A social media app with advanced features for photo sharing and location-based interactions."
   }
 }

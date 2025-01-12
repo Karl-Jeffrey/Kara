@@ -1,7 +1,6 @@
 const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid"); // For generating unique file names
 
-// Create a new activity
 exports.createActivity = async (data, file) => {
   const {
     activityId,
@@ -9,6 +8,7 @@ exports.createActivity = async (data, file) => {
     description,
     category,
     price,
+    imageUrl,
     maxParticipants,
     createdBy,
     isBusinessActivity,
@@ -17,29 +17,34 @@ exports.createActivity = async (data, file) => {
     availability,
   } = data;
 
-  try {
-    const bucket = admin.storage().bucket(); // Access the default storage bucket
-    let imageUrl = null;
+  // Validate required fields
+  if (!activityId || !title || !description) {
+    throw new Error("Missing required fields: activityId, title, or description");
+  }
 
-    // Upload the file to Firebase Storage if provided
+  try {
+    console.log("Initializing activity creation...");
+    const bucket = admin.storage().bucket(); // Access the default storage bucket
+    let finalImageUrl = imageUrl || null;
+
     if (file) {
-      const fileName = `activities/${activityId}_${uuidv4()}`; // Unique file name in Storage
+      const fileName = `activities/${activityId}_${uuidv4()}`; // Unique file name
       const fileUpload = bucket.file(fileName);
 
-      // Upload the file to Firebase Storage
+      console.log("Uploading file to Firebase Storage:", fileName);
+
       await fileUpload.save(file.buffer, {
-        metadata: {
-          contentType: file.mimetype,
-        },
+        metadata: { contentType: file.mimetype },
       });
 
-      // Make the file public or generate a signed URL
+      // Make the file public
       await fileUpload.makePublic();
-      imageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      finalImageUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      console.log("File uploaded successfully. Public URL:", finalImageUrl);
     }
 
-    // Save the activity to Firestore
-    const activityRef = admin.firestore().collection("Activities").doc(activityId);
+    console.log("Saving activity to Firestore...");
+    const activityRef = admin.firestore().collection("activities").doc(activityId); // Ensure collection name matches Firestore
     await activityRef.set({
       activityId,
       title,
@@ -52,44 +57,53 @@ exports.createActivity = async (data, file) => {
       businessDetails: businessDetails || null,
       location,
       availability,
-      imageUrl: imageUrl || null, // Add the generated URL here
+      imageUrl: finalImageUrl, // Use uploaded image URL if available
       createdAt: admin.firestore.Timestamp.now(),
     });
 
-    console.log("Activity created successfully with image");
+    console.log("Activity created successfully.");
   } catch (error) {
     console.error("Error creating activity:", error.message);
     throw error;
   }
 };
 
-// Get all activities
 exports.getActivities = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10; // Pagination limit
-    const startAfter = req.query.startAfter || null; // Start after this document
-    const category = req.query.category || null; // Optional filter by category
+    const limit = parseInt(req.query.limit) || 10; // Default to 10
+    const startAfter = req.query.startAfter || null;
+    const category = req.query.category || null;
 
-    let query = admin.firestore().collection("Activities").orderBy("createdAt", "desc").limit(limit);
+    console.log("Fetching activities...");
+    console.log("Query parameters:", { limit, startAfter, category });
 
+    let query = admin.firestore().collection("activities").orderBy("createdAt", "desc").limit(limit); // Ensure collection name matches Firestore
+
+    // Handle pagination
     if (startAfter) {
-      const lastDoc = await admin.firestore().collection("Activities").doc(startAfter).get();
-      if (lastDoc.exists) {
-        query = query.startAfter(lastDoc);
+      const lastDoc = await admin.firestore().collection("activities").doc(startAfter).get();
+      if (!lastDoc.exists) {
+        console.error("Invalid startAfter document ID:", startAfter);
+        return res.status(400).json({ error: "Invalid startAfter document ID" });
       }
+      query = query.startAfter(lastDoc);
     }
 
+    // Apply category filter if provided
     if (category) {
       query = query.where("category", "==", category);
     }
 
+    console.log("Executing Firestore query...");
     const activitiesSnapshot = await query.get();
+
     const activities = activitiesSnapshot.docs.map((doc) => ({
-      id: doc.id, // Document ID
-      ...doc.data(), // Activity data
+      id: doc.id,
+      ...doc.data(),
     }));
 
-    res.status(200).json(activities); // Send the activities as a JSON response
+    console.log("Activities fetched successfully. Count:", activities.length);
+    res.status(200).json(activities); // Respond with activities
   } catch (error) {
     console.error("Error fetching activities:", error.message);
     res.status(500).json({ error: `Unable to fetch activities: ${error.message}` });

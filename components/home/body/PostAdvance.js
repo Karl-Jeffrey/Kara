@@ -120,7 +120,8 @@ function PostAdvance({ post }) {
   function PostFooter() {
     const [showCaptions, setShowCaptions] = useState(false);
     const activityTags = post.tags || [];
-
+    const location = post.location;
+  
     return (
       <View style={{ marginHorizontal: 20 }}>
         <View
@@ -138,7 +139,9 @@ function PostAdvance({ post }) {
               color={GlobalStyles.colors.gray}
             />
             <Text style={{ color: GlobalStyles.colors.gray, paddingHorizontal: 5 }}>
-              {post.location || "No location provided"}
+              {location
+                ? `${location.city || "Unknown City"}, ${location.province || "Unknown Province"}, ${location.country || "Unknown Country"}`
+                : "No location provided"}
             </Text>
           </View>
           <Text style={{ color: GlobalStyles.colors.gray, paddingHorizontal: 5 }}>
@@ -187,6 +190,7 @@ function PostAdvance({ post }) {
       </View>
     );
   }
+  
 
   return (
     <View
