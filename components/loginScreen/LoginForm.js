@@ -4,8 +4,10 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { Formik } from "formik";
 import * as yup from "yup";
 import Validator from "email-validator";
+import { auth, firestore } from "../../firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
-import Button from "../Button";
 import InputField from "../InputField";
 import { GlobalStyles } from "../../constants/Styles";
 import { AuthContext } from "../../store/auth-context";
@@ -20,10 +22,35 @@ const LoginForm = ({ navigation }) => {
 
   async function onLogin(email, password) {
     try {
-      authCtx.authenticate();
-      console.log("Response data:", response.data);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid; // Get the user's UID
+      console.log("Logged in with User ID:", userId);
+
+      // Fetch additional user data from Firestore
+      const userDocRef = doc(firestore, "users", userId);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data(); // Get user data from Firestore
+        console.log("Fetched user data:", userData);
+
+        // Store user data in AuthContext
+        authCtx.authenticate({ ...userData, userId });
+      } else {
+        console.error(`User document with ID ${userId} does not exist in Firestore.`);
+        Alert.alert("Error", "User profile not found. Please contact support.");
+      }
     } catch (error) {
-      Alert.alert("ERROR", error.response.data.msg);
+      console.error("Login error:", error.message);
+
+      // Provide more specific error messages for known issues
+      if (error.code === "auth/user-not-found") {
+        Alert.alert("Error", "No user found with this email.");
+      } else if (error.code === "auth/wrong-password") {
+        Alert.alert("Error", "Incorrect password. Please try again.");
+      } else {
+        Alert.alert("Error", "An error occurred during login. Please try again.");
+      }
     }
   }
 
@@ -42,7 +69,6 @@ const LoginForm = ({ navigation }) => {
           handleSubmit,
           values,
           isValid,
-          errors,
         }) => (
           <>
             <InputField
@@ -55,7 +81,7 @@ const LoginForm = ({ navigation }) => {
               inValid={
                 values.email.length < 1 || Validator.validate(values.email)
               }
-              containerStyle={{ margin: 10, borderRadius: 6 }} // Square corners
+              containerStyle={{ margin: 10, borderRadius: 6 }}
             />
             <InputField
               textContentType="password"
@@ -67,7 +93,7 @@ const LoginForm = ({ navigation }) => {
               inValid={
                 values.password.length === 0 || values.password.length > 7
               }
-              containerStyle={{ margin: 10, borderRadius: 6 }} // Square corners
+              containerStyle={{ margin: 10, borderRadius: 6 }}
             />
             <TouchableOpacity>
               <Text
@@ -83,12 +109,11 @@ const LoginForm = ({ navigation }) => {
             </TouchableOpacity>
 
             <View style={{ margin: 10, marginBottom: 0 }}>
-              {/* TouchableOpacity for more control */}
               <TouchableOpacity
                 style={{
-                  backgroundColor:  GlobalStyles.colors.blue,
+                  backgroundColor: GlobalStyles.colors.blue,
                   paddingVertical: 12,
-                  borderRadius: 6, // Square corners
+                  borderRadius: 6,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -119,9 +144,7 @@ const LoginForm = ({ navigation }) => {
 export default LoginForm;
 
 const styles = StyleSheet.create({
-  wrapper: {
-    // marginTop: 50,
-  },
+  wrapper: {},
   inputField: {
     borderRadius: 4,
     borderColor: "gray",

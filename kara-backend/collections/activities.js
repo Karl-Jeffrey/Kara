@@ -15,6 +15,7 @@ exports.createActivity = async (data, file) => {
     businessDetails,
     location,
     availability,
+    imageUrl,
   } = data;
 
   try {

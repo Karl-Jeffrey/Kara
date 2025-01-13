@@ -20,112 +20,62 @@ import { POSTS } from "../../data/posts.js";
 
 const TopTab = createMaterialTopTabNavigator();
 
-function Posts({ navigation, route, refreshing }) {
-  const authCtx = useContext(AuthContext);
+function Posts({ navigation, route, userId, refreshing }) {
   const [fetching, setFetching] = useState(true);
   const [errorFetching, setErrorFetching] = useState(false);
   const [posts, setPosts] = useState([]);
 
   const getPosts = async () => {
+    if (!userId) {
+      console.warn("User ID is missing, cannot fetch posts.");
+      return;
+    }
+
     try {
       setFetching(true);
       setErrorFetching(false);
-      setPosts(POSTS);
+      console.log("Fetching posts for userId:", userId);
+      // Replace this with actual API or Firestore query
+      const userPosts = POSTS.filter((post) => post.userId === userId);
+      setPosts(userPosts);
     } catch (error) {
       setErrorFetching(true);
-      console.log(error);
+      console.error("Error fetching posts:", error.message);
+    } finally {
+      setFetching(false);
     }
-    setFetching(false);
   };
 
   useEffect(() => {
     getPosts();
-  }, []);
-
-  useEffect(() => {
-    if (refreshing) {
-      console.log("refreshing");
-      getPosts();
-    }
-  }, [refreshing]);
-const scrollY = useRef(new Animated.Value(0)).current;
+  }, [userId]);
 
   return (
     <View style={{ flex: 1, backgroundColor: GlobalStyles.colors.primary }}>
       {fetching ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <ActivityIndicator size={50} color={GlobalStyles.colors.purple} />
-        </View>
+        <ActivityIndicator size={50} color={GlobalStyles.colors.purple} />
       ) : errorFetching ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <Pressable onPress={getPosts}>
-            <Ionicons
-              name="reload-circle"
-              color={GlobalStyles.colors.purple}
-              size={50}
-            />
-            <Text
-              style={{ color: GlobalStyles.colors.purple, fontWeight: "bold" }}
-            >
-              Reload
-            </Text>
-          </Pressable>
-        </View>
-      ) : posts.length > 0 ? (
-        <Animated.ScrollView
-          showsVerticalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
-          )}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              margin: 5,
-              marginBottom: GlobalStyles.styles.tabBarPadding,
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              {posts.map((item, index) => (
-                <View key={index}>
-                  {index % 2 === 0 && <Post postData={posts[index]} />}
-                </View>
-              ))}
-            </View>
-            <View style={{ flex: 1 }}>
-              {posts.map((item, index) => (
-                <View key={index}>
-                  {index % 2 !== 0 && <Post postData={posts[index]} />}
-                </View>
-              ))}
-            </View>
-          </View>
-        </Animated.ScrollView>
-      ) : (
-        <View
-          style={{
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Image
-            source={require("../../assets/no-photo.jpg")}
-            style={{
-              width: 300,
-              height: 300,
-              resizeMode: "contain",
-            }}
+        <Pressable onPress={getPosts}>
+          <Ionicons
+            name="reload-circle"
+            color={GlobalStyles.colors.purple}
+            size={50}
           />
-        </View>
+          <Text style={{ color: GlobalStyles.colors.purple }}>Reload</Text>
+        </Pressable>
+      ) : posts.length > 0 ? (
+        <FlatList
+          data={posts}
+          renderItem={({ item }) => <Post postData={item} />}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      ) : (
+        <Text style={{ color: "white" }}>No posts available.</Text>
       )}
     </View>
   );
 }
+
 
 function Likes() {
   return (
@@ -155,18 +105,16 @@ function Likes() {
   );
 }
 
-const ProfileBody = ({ refreshing }) => {
-  // Déclare la valeur animée pour capturer le défilement
+const ProfileBody = ({ userId, refreshing }) => {
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  // Style de la tabBar avec le défilement
   const tabBarStyle = {
     transform: [
       {
         translateY: scrollY.interpolate({
-          inputRange: [0, 200],  // Plage de défilement
-          outputRange: [0, -60], // La TabBar se déplace de -60px
-          extrapolate: "clamp",  // Ne dépasse pas les limites
+          inputRange: [0, 200],
+          outputRange: [0, -60],
+          extrapolate: "clamp",
         }),
       },
     ],
@@ -176,12 +124,7 @@ const ProfileBody = ({ refreshing }) => {
     <TopTab.Navigator
       screenOptions={{
         tabBarActiveTintColor: "white",
-        tabBarLabelStyle: {
-          textTransform: "none",
-          fontSize: 18,
-          padding: 0,
-          margin: 0,
-        },
+        tabBarLabelStyle: { fontSize: 18, textTransform: "none" },
         tabBarInactiveTintColor: "rgba(255,255,255,0.3)",
         tabBarIndicatorStyle: {
           height: 3,
@@ -191,12 +134,8 @@ const ProfileBody = ({ refreshing }) => {
           backgroundColor: GlobalStyles.colors.purple,
         },
         tabBarStyle: [
-          tabBarStyle,  // Applique le style d'animation à la TabBar
+          tabBarStyle,
           {
-            padding: 0,
-            margin: 0,
-            justifyContent: "center",
-            width: "100%",
             elevation: 0,
             backgroundColor: "transparent",
             borderBottomWidth: 1,
@@ -204,20 +143,18 @@ const ProfileBody = ({ refreshing }) => {
           },
         ],
         tabBarPressColor: "white",
-        tabBarPosition: "top",  // La TabBar est en haut
-        tabBarScrollEnabled: false,  // Désactive le défilement horizontal
+        tabBarPosition: "top",
       }}
     >
       <TopTab.Screen
         name="Posts"
-        options={{
-          title: "My Posts",
-        }}
+        options={{ title: "My Posts" }}
       >
         {({ navigation, route }) => (
           <Posts
             navigation={navigation}
             route={route}
+            userId={userId} // Pass userId
             refreshing={refreshing}
           />
         )}
@@ -226,19 +163,18 @@ const ProfileBody = ({ refreshing }) => {
       <TopTab.Screen
         name="My Activities"
         options={{ title: "My Activities" }}
-        children={() => <MyActivities />}
+        children={() => <MyActivities userId={userId} />} // Pass userId
       />
 
       <TopTab.Screen
         name="Likes"
-        options={{
-          title: "Favorite",
-        }}
+        options={{ title: "Favorite" }}
       >
         {({ navigation, route }) => (
           <Likes
             navigation={navigation}
             route={route}
+            userId={userId} // Pass userId
             refreshing={refreshing}
           />
         )}
@@ -248,3 +184,4 @@ const ProfileBody = ({ refreshing }) => {
 };
 
 export default ProfileBody;
+

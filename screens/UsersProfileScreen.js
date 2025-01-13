@@ -1,18 +1,17 @@
-import { useState, useEffect, useRef, useContext } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
-import ProfileHead from "../components/userProfileScreen/ProfileHead.js";
-import ProfileBody from "../components/userProfileScreen/ProfileBody.js";
+import React, { useState, useEffect, useContext } from "react";
+import { View, StyleSheet } from "react-native";
+import ProfileHead from "../components/userProfileScreen/ProfileHead";
+import ProfileBody from "../components/userProfileScreen/ProfileBody";
 
-import { AuthContext } from "../store/auth-context.js";
-import { GlobalStyles } from "../constants/Styles.js";
-import Header from "../components/userProfileScreen/Header.js";
-import HeaderSvg from "../components/userProfileScreen/HeaderSVG.js";
+import { AuthContext } from "../store/auth-context";
+import { GlobalStyles } from "../constants/Styles";
+import Header from "../components/userProfileScreen/Header";
+import HeaderSvg from "../components/userProfileScreen/HeaderSVG";
 
 const UserProfileScreen = ({ navigation, route }) => {
-  const authCtx = useContext(AuthContext);
-  const userData = useState(authCtx.userData)[0];
-  const [refreshing, setRefreshing] = useState(false);
+  const { userData } = useContext(AuthContext); // Get user data from AuthContext
   const [headerHeight, setHeaderHeight] = useState(150);
+
   useEffect(() => {
     navigation.setOptions({
       headerShown: false,
@@ -29,10 +28,14 @@ const UserProfileScreen = ({ navigation, route }) => {
         }}
       >
         <Header viewMode={route?.params?.ViewUser} />
-        <ProfileHead userData={userData} viewMode={route?.params?.ViewUser} />
+        {/* Pass userId and userData */}
+        <ProfileHead
+          userId={userData?.userId}
+          viewMode={route?.params?.ViewUser}
+        />
       </View>
-
-      <ProfileBody refreshing={refreshing} />
+      {/* Pass userId to ProfileBody */}
+      <ProfileBody userId={userData?.userId} refreshing={false} />
     </View>
   );
 };

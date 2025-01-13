@@ -6,7 +6,7 @@ import * as yup from "yup";
 import Validator from "email-validator";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, firestore } from "../../firebase"; // Ensure firebase.js is properly set up
-import { collection, addDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 
 import InputField from "../InputField";
 import { GlobalStyles } from "../../constants/Styles";
@@ -28,13 +28,13 @@ const SignupForm = ({ navigation }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Save the user details in Firestore with an auto-generated document ID
-      await addDoc(collection(firestore, "users"), {
-        userId: user.uid,
+      // Save the user details in Firestore using userId as the document ID
+      await setDoc(doc(firestore, "users", user.uid), {
+        userId: user.uid, // Use userId as document ID
         fullName: fullname,
         username: username,
         email: email,
-        profilePicture: "",
+        profilePicture: "", // Default profile picture
         friends: [],
         occupation: "",
         bio: "Edit Bio",
