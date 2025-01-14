@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { GlobalStyles } from "../constants/Styles";
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const AppliedFilterScreen = () => {
   // Hardcoded fake activities
@@ -50,9 +51,18 @@ const AppliedFilterScreen = () => {
           fakeActivities.map((activity) => (
             <View key={activity.id} style={styles.activityCard}>
               <Text style={styles.activityTitle}>{activity.title}</Text>
-              <Text style={styles.activityDescription}>Location: {activity.location}</Text>
-              <Text style={styles.activityPrice}>Price: {activity.price}</Text>
-              <Text style={styles.activityHype}>Hype Level: {activity.hypeLevel}</Text>
+              <View style={styles.activityRow}>
+                <Icon name="map-marker" size={18} color="white" />
+                <Text style={styles.activityDescription}>Location: {activity.location}</Text>
+              </View>
+              <View style={styles.activityRow}>
+                <Icon name="dollar" size={18} color="white" />
+                <Text style={styles.activityPrice}>Price: {activity.price}</Text>
+              </View>
+              <View style={styles.activityRow}>
+                <Icon name="bullhorn" size={18} color="white" />
+                <Text style={styles.activityHype}>Hype Level: {activity.hypeLevel}</Text>
+              </View>
             </View>
           ))
         ) : (
@@ -89,20 +99,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "white",
   },
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+  },
   activityDescription: {
     fontSize: 14,
     color: "white",
-    marginTop: 5,
+    marginLeft: 8,
   },
   activityPrice: {
     fontSize: 16,
     color: "white",
-    marginTop: 5,
+    marginLeft: 8,
   },
   activityHype: {
     fontSize: 16,
     color: "white",
-    marginTop: 5,
+    marginLeft: 8,
   },
   noResults: {
     fontSize: 18,
