@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Image,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { GlobalStyles } from "../../../constants/Styles";
 import { collection, getDocs } from "firebase/firestore";
@@ -15,11 +16,13 @@ import { firestore, storage } from "../../../firebase";
 import { getDownloadURL, ref } from "firebase/storage";
 import { useSharedValue } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const { width } = Dimensions.get("window");
 
 const Feed = ({ StoryTranslate }) => {
   const [activities, setActivities] = useState([]);
+  const [likedActivities, setLikedActivities] = useState({});
   const [loading, setLoading] = useState(true);
   const lastScrollY = useSharedValue(0);
 
@@ -57,7 +60,16 @@ const Feed = ({ StoryTranslate }) => {
     fetchActivities();
   }, []);
 
+  const toggleLike = (id) => {
+    setLikedActivities((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id],
+    }));
+  };
+
   const renderActivityItem = ({ item }) => {
+    const isLiked = likedActivities[item.id];
+
     return (
       <View style={styles.card}>
         {/* Image Section */}
@@ -77,8 +89,18 @@ const Feed = ({ StoryTranslate }) => {
 
         {/* Content Section */}
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>{item.title || "Activity Title"}</Text>
-          <Text style={styles.price}>${item.price || "0.00"}</Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>{item.title || "Activity Title"}</Text>
+            <Text style={styles.price}>${item.price || "0.00"}</Text>
+          </View>
+          {/* Like Button */}
+          <TouchableOpacity onPress={() => toggleLike(item.id)}>
+            <Ionicons
+              name={isLiked ? "heart" : "heart-outline"}
+              size={24}
+              color={isLiked ? GlobalStyles.colors.red : "#555"}
+            />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -161,11 +183,17 @@ const styles = StyleSheet.create({
   gradient: {
     position: "absolute",
     bottom: 0,
-    height: 40,
+    height: 50,
     width: "100%",
   },
   contentContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 15,
+  },
+  textContainer: {
+    flex: 1,
   },
   title: {
     fontSize: 18,
@@ -175,7 +203,6 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     color: "#555",
-    marginTop: 5,
   },
 });
 
