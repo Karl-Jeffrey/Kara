@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { GlobalStyles } from "../../../constants/Styles";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 import { firestore, storage } from "../../../firebase";
 import { getDownloadURL, ref } from "firebase/storage";
 import { useSharedValue } from "react-native-reanimated";
@@ -20,7 +20,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 
 const { width } = Dimensions.get("window");
 
-const Feed = ({ StoryTranslate }) => {
+const Feed = ({ StoryTranslate, navigation }) => {
   const [activities, setActivities] = useState([]);
   const [likedActivities, setLikedActivities] = useState({});
   const [loading, setLoading] = useState(true);
@@ -60,11 +60,24 @@ const Feed = ({ StoryTranslate }) => {
     fetchActivities();
   }, []);
 
-  const toggleLike = (id) => {
+  const toggleLike = async (id, activity) => {
     setLikedActivities((prevState) => ({
       ...prevState,
       [id]: !prevState[id],
     }));
+
+    try {
+      await addDoc(collection(firestore, "LikedPosts"), {
+        title: activity.title,
+        imagePath: activity.imagePath,
+        userId: "some-user-id", // Ideally, use user authentication ID
+        createdAt: new Date(),
+      });
+
+      console.log("Activity liked:", activity.title);
+    } catch (error) {
+      console.error("Error liking activity:", error.message);
+    }
   };
 
   const renderActivityItem = ({ item }) => {
@@ -94,7 +107,7 @@ const Feed = ({ StoryTranslate }) => {
             <Text style={styles.price}>${item.price || "0.00"}</Text>
           </View>
           {/* Like Button */}
-          <TouchableOpacity onPress={() => toggleLike(item.id)}>
+          <TouchableOpacity onPress={() => toggleLike(item.id, item)}>
             <Ionicons
               name={isLiked ? "heart" : "heart-outline"}
               size={24}
@@ -102,6 +115,14 @@ const Feed = ({ StoryTranslate }) => {
             />
           </TouchableOpacity>
         </View>
+
+        {/* View Details Button */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('PostDetailScreen', { activityId: item.id })}
+          style={styles.viewDetailsButton}
+        >
+          <Text style={styles.viewDetailsText}>View Details</Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -203,6 +224,18 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     color: "#555",
+  },
+  viewDetailsButton: {
+    backgroundColor: GlobalStyles.colors.primary500,
+    padding: 10,
+    margin: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  viewDetailsText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
