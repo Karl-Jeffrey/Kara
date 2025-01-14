@@ -10,21 +10,38 @@ import {
 } from "react-native";
 import { GlobalStyles } from "../constants/Styles"; // Import GlobalStyles
 import { collection, getDocs } from "firebase/firestore";
-import { firestore } from "../firebase"; // Import Firestore instance
-
+import { firestore, storage } from "../firebase"; // Import Firestore and Storage instances
+import { getDownloadURL, ref } from "firebase/storage";
+ 
 function MyActivities() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Fetch activities from Firestore
+ 
+  // Fetch activities from Firestore and resolve image URLs
   useEffect(() => {
     const fetchActivities = async () => {
       try {
         const querySnapshot = await getDocs(collection(firestore, "activities"));
-        const activitiesData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+ 
+        const activitiesData = await Promise.all(
+          querySnapshot.docs.map(async (doc) => {
+            const data = doc.data();
+ 
+            // Resolve the image URL from Firebase Storage
+            let imageUrl = null;
+            if (data.imagePath) {
+              const imageRef = ref(storage, data.imagePath);
+              imageUrl = await getDownloadURL(imageRef);
+            }
+ 
+            return {
+              id: doc.id,
+              ...data,
+              imageUrl, // Add the resolved image URL
+            };
+          })
+        );
+ 
         setActivities(activitiesData);
       } catch (error) {
         console.error("Error fetching activities:", error.message);
@@ -32,17 +49,24 @@ function MyActivities() {
         setLoading(false);
       }
     };
-
+ 
     fetchActivities();
   }, []);
-
+ 
+  // Render each activity card
   const renderActivity = ({ item }) => (
     <TouchableOpacity style={styles.card}>
-      <Image source={{ uri: item.imageUrl }} style={styles.image} />
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.image} />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.imagePlaceholderText}>No Image</Text>
+        </View>
+      )}
       <Text style={styles.title}>{item.title}</Text>
     </TouchableOpacity>
   );
-
+ 
   return (
     <View style={styles.container}>
       {loading ? (
@@ -54,7 +78,7 @@ function MyActivities() {
           data={activities}
           renderItem={renderActivity}
           keyExtractor={(item) => item.id}
-          numColumns={3} // 3 cards per row
+          numColumns={3} // Display 3 cards per row
           columnWrapperStyle={styles.columnWrapper}
         />
       ) : (
@@ -65,7 +89,7 @@ function MyActivities() {
     </View>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -92,6 +116,17 @@ const styles = StyleSheet.create({
     height: "70%",
     borderRadius: 8,
   },
+  imagePlaceholder: {
+    width: "100%",
+    height: "70%",
+    backgroundColor: GlobalStyles.colors.gray,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagePlaceholderText: {
+    color: "white",
+    fontSize: 14,
+  },
   title: {
     marginTop: 5,
     color: GlobalStyles.colors.primary,
@@ -112,5 +147,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
-
+ 
 export default MyActivities;
+ 
+ 
