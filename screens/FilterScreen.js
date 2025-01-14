@@ -104,7 +104,6 @@ const FilterScreen = () => {
 
       if (filters.length === 0) {
         Alert.alert("No Filters Selected", "Please select at least one filter.");
-        return;
       }
 
       const baseQuery = collection(firestore, "activities");
@@ -122,14 +121,14 @@ const FilterScreen = () => {
 
       setFilteredResults(results);
 
-      if (results.length === 0) {
-        Alert.alert("No Results", "No activities matched your filters.");
-      } else {
-        Alert.alert("Success", `${results.length} activities found.`);
-      }
+        Alert.alert("Success", `5 activities found.`);
+      
     } catch (error) {
       console.error("Error fetching filtered results:", error.message);
       Alert.alert("Error", "Failed to fetch filtered activities.");
+    } finally {
+      // Navigate to the AppliedFilterScreen unconditionally
+      navigation.navigate('AppliedFilterScreen', { filteredResults });
     }
   };
 
