@@ -133,9 +133,9 @@ const ProfileHead = ({ userId, viewMode, scrollY }) => {
       </View>
 
       <View style={styles.statsContainer}>
-        <ProfileStat text={"255"} subText={"Posts"} />
-        <ProfileStat text={"14.6k"} subText={"Followers"} />
-        <ProfileStat text={"378"} subText={"Followings"} />
+        <ProfileStat text={"2"} subText={"Posts"} />
+        <ProfileStat text={"0"} subText={"Followers"} />
+        <ProfileStat text={"0"} subText={"Followings"} />
       </View>
     </Animated.View>
   );

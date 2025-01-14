@@ -13,7 +13,7 @@ import { GlobalStyles } from "../constants/Styles";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { firestore } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-
+ 
 const categories = [
   {
     title: "Types of Activities",
@@ -76,52 +76,52 @@ const categories = [
     ],
   },
 ];
-
+ 
 const FilterScreen = () => {
   const [selectedFilters, setSelectedFilters] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [filteredResults, setFilteredResults] = useState([]);
   const navigation = useNavigation();
-
+ 
   const handleTilePress = (category) => {
     setCurrentCategory(category);
     setModalVisible(true);
   };
-
+ 
   const handleFilterPress = (categoryTitle, option) => {
     setSelectedFilters((prev) => ({
       ...prev,
       [categoryTitle]: prev[categoryTitle] === option ? null : option,
     }));
   };
-
+ 
   const handleApplyFilters = async () => {
     try {
       const filters = Object.entries(selectedFilters).filter(
         ([_, value]) => value !== null
       );
-
+ 
       if (filters.length === 0) {
         Alert.alert("No Filters Selected", "Please select at least one filter.");
         return;
       }
-
+ 
       const baseQuery = collection(firestore, "activities");
       const filterQueries = filters.map(([key, value]) =>
         where(key, "==", value)
       );
-
+ 
       const finalQuery = query(baseQuery, ...filterQueries);
-
+ 
       const querySnapshot = await getDocs(finalQuery);
       const results = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-
+ 
       setFilteredResults(results);
-
+ 
       if (results.length === 0) {
         Alert.alert("No Results", "No activities matched your filters.");
       } else {
@@ -132,7 +132,7 @@ const FilterScreen = () => {
       Alert.alert("Error", "Failed to fetch filtered activities.");
     }
   };
-
+ 
   const renderCategoryTile = (category) => (
     <Pressable
       key={category.title}
@@ -153,7 +153,7 @@ const FilterScreen = () => {
       )}
     </Pressable>
   );
-
+ 
   const renderFilterOptions = () => (
     <View style={styles.modalContent}>
       <Text style={styles.modalTitle}>{currentCategory.title}</Text>
@@ -178,7 +178,7 @@ const FilterScreen = () => {
       </Pressable>
     </View>
   );
-
+ 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -201,7 +201,7 @@ const FilterScreen = () => {
           </View>
         )}
       </ScrollView>
-
+ 
       <Modal
         transparent
         visible={modalVisible}
@@ -215,9 +215,9 @@ const FilterScreen = () => {
     </View>
   );
 };
-
+ 
 export default FilterScreen;
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,

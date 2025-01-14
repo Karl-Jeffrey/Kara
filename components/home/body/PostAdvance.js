@@ -7,41 +7,78 @@ import {
   Dimensions,
   Pressable,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { DEFAULT_DP, GlobalStyles } from "../../../constants/Styles";
 import { LinearGradient } from "expo-linear-gradient";
 import PressEffect from "../../UI/PressEffect";
-import CommentSheet from "../../Comments/CommentSheet";
 import { Platform } from "react-native";
+import { collection, getDocs } from "firebase/firestore";
+import { firestore, storage } from "../../../firebase";
+import { getDownloadURL, ref } from "firebase/storage";
 import { timeDifference } from "../../../utils/helperFunctions";
 
 const { height, width } = Dimensions.get("window");
 
-function PostAdvance({ post }) {
+function PostAdvance() {
   const navigation = useNavigation();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Render user avatar
-  function Avatar() {
+  // Fetch posts from Firestore
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(firestore, "posts"));
+
+        const postData = await Promise.all(
+          querySnapshot.docs.map(async (doc) => {
+            const data = doc.data();
+            let imageUrl = null;
+
+            // Resolve image path if available
+            if (data.picturePath) {
+              const imageRef = ref(storage, data.picturePath);
+              imageUrl = await getDownloadURL(imageRef);
+            }
+
+            return {
+              id: doc.id,
+              ...data,
+              picturePath: imageUrl || DEFAULT_DP,
+            };
+          })
+        );
+
+        setPosts(postData);
+      } catch (error) {
+        console.error("Error fetching posts:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const Avatar = ({ post }) => {
     const profilePic = post.userPicturePath || DEFAULT_DP;
     return (
       <View style={{ flexDirection: "row" }}>
         <PressEffect>
           <Pressable
             style={{ flexDirection: "row" }}
-            onPress={() => {
+            onPress={() =>
               navigation.navigate("UserProfileScreen", {
                 backWhite: true,
                 ViewUser: true,
-              });
-            }}
+              })
+            }
           >
-            <Image
-              source={{ uri: profilePic }}
-              style={styles.story}
-            />
+            <Image source={{ uri: profilePic }} style={styles.story} />
             <View style={{ marginLeft: 10 }}>
               <Text style={{ color: "white", fontWeight: "bold", fontSize: 15 }}>
                 {post.username || "Anonymous"}
@@ -60,10 +97,9 @@ function PostAdvance({ post }) {
         </PressEffect>
       </View>
     );
-  }
+  };
 
-  // Render image of the post
-  function PostImage({ children }) {
+  const PostImage = ({ post, children }) => {
     const [resizeModeCover, setResizeModeCover] = useState(true);
     const [ratio, setRatio] = useState(1);
 
@@ -89,7 +125,7 @@ function PostAdvance({ post }) {
         }}
       >
         <ImageBackground
-          source={{ uri: post.picturePath || DEFAULT_DP }}
+          source={{ uri: post.picturePath }}
           style={{
             width: "100%",
             aspectRatio: ratio,
@@ -114,10 +150,9 @@ function PostAdvance({ post }) {
         </ImageBackground>
       </Pressable>
     );
-  }
+  };
 
-  // Render post footer
-  function PostFooter() {
+  const PostFooter = ({ post }) => {
     const [showCaptions, setShowCaptions] = useState(false);
     const activityTags = post.tags || [];
 
@@ -186,20 +221,33 @@ function PostAdvance({ post }) {
         </Text>
       </View>
     );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={GlobalStyles.colors.purple} />
+      </View>
+    );
   }
 
   return (
-    <View
-      style={{
-        backgroundColor: GlobalStyles.colors.primary300,
-        borderRadius: 30,
-        marginHorizontal: 10,
-      }}
-    >
-      <PostImage>
-        <Avatar />
-      </PostImage>
-      <PostFooter />
+    <View style={styles.container}>
+      {posts.map((post) => (
+        <View
+          key={post.id}
+          style={{
+            backgroundColor: GlobalStyles.colors.primary300,
+            borderRadius: 30,
+            marginHorizontal: 10,
+          }}
+        >
+          <PostImage post={post}>
+            <Avatar post={post} />
+          </PostImage>
+          <PostFooter post={post} />
+        </View>
+      ))}
     </View>
   );
 }
@@ -226,5 +274,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: GlobalStyles.colors.primary,
+    padding: 10,
   },
 });
