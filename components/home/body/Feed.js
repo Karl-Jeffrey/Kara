@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { GlobalStyles } from "../../../constants/Styles";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore"; // Import orderBy here
 import { firestore, storage } from "../../../firebase";
 import { getDownloadURL, ref } from "firebase/storage";
 import { useSharedValue } from "react-native-reanimated";
@@ -29,7 +29,13 @@ const Feed = ({ StoryTranslate, navigation }) => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const querySnapshot = await getDocs(collection(firestore, "activities"));
+        // Use query with orderBy to fetch activities sorted by createdAt in descending order
+        const activitiesQuery = query(
+          collection(firestore, "activities"),
+          orderBy("createdAt", "desc") // Ensure activities are sorted by creation time
+        );
+
+        const querySnapshot = await getDocs(activitiesQuery);
 
         const activitiesData = await Promise.all(
           querySnapshot.docs.map(async (doc) => {
