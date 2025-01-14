@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 
-// Create a new activity
+// Create a new activity in the Firestore "activities" collection
 exports.createActivity = async (data) => {
   const {
     activityId,
@@ -14,29 +14,39 @@ exports.createActivity = async (data) => {
     businessDetails,
     location,
     availability,
-    imageUrl, // Include imageUrl in the destructured data
+    imageUrl, // URL of the uploaded image
   } = data;
 
   try {
-    const activityRef = admin.firestore().collection("Activities").doc(activityId);
-    await activityRef.set({
+    // Validate required fields
+    if (!activityId || !title || !createdBy || !category) {
+      throw new Error("Missing required fields: activityId, title, category, or createdBy");
+    }
+
+    const activityRef = admin.firestore().collection("activities").doc(activityId);
+
+    // Prepare activity data
+    const activityData = {
       activityId,
       title,
-      description,
+      description: description || "",
       category,
-      price,
-      maxParticipants,
+      price: price || 0, // Default to 0 if no price provided
+      maxParticipants: maxParticipants || null, // Allow null for unlimited participants
       createdBy,
-      isBusinessActivity,
+      isBusinessActivity: isBusinessActivity || false,
       businessDetails: businessDetails || null,
-      location,
-      availability,
-      imageUrl: imageUrl || null, // Add imageUrl here, default to null if not provided
+      location: location || null,
+      availability: availability || [],
+      imageUrl: imageUrl || null, // Set null if no image is provided
       createdAt: admin.firestore.Timestamp.now(),
-    });
-    console.log("Activity created successfully");
+    };
+
+    // Save the activity to Firestore
+    await activityRef.set(activityData);
+    console.log(`Activity "${title}" created successfully!`);
   } catch (error) {
     console.error("Error creating activity:", error.message);
-    throw error;
+    throw error; // Re-throw to handle it in calling code if necessary
   }
 };

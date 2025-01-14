@@ -16,7 +16,7 @@ import { AuthContext } from "../../../store/auth-context";
 import { Path, Svg } from "react-native-svg";
 import PressEffect from "../../UI/PressEffect";
 const { height, width } = Dimensions.get("window");
-
+ 
 function Post({ post }) {
   const authCtx = useContext(AuthContext);
   function PostHeader() {
@@ -37,7 +37,7 @@ function Post({ post }) {
             fill={GlobalStyles.colors.primary500}
           />
         </Svg>
-
+ 
         <View
           style={{
             backgroundColor: GlobalStyles.colors.primary500,
@@ -118,11 +118,11 @@ function Post({ post }) {
       </View>
     );
   }
-
+ 
   function PostImage() {
     const [resizeModeCover, setResizeModeCover] = useState(true);
     const [ratio, setRatio] = useState(1);
-
+ 
     useEffect(() => {
       Image.getSize(post.picturePath, (width, height) => {
         const imageRatio = width / height;
@@ -133,7 +133,7 @@ function Post({ post }) {
         }
       });
     }, [post]);
-
+ 
     return (
       <Pressable
         onPress={() => {
@@ -158,16 +158,16 @@ function Post({ post }) {
   }
   function PostStats() {
     const [liked, setLiked] = useState(false);
-
+ 
     const [totalLikes, setTotalLikes] = useState(post.likes.length);
     const [showCaptions, setShowCaptions] = useState(false);
     const [showComments, setShowComments] = useState(false);
     async function handleLike() {
       setTotalLikes((prevData) => (liked ? prevData - 1 : prevData + 1));
-
+ 
       setLiked(!liked);
     }
-
+ 
     function FooterButton({ icon, number, onPress, color = "white" }) {
       return (
         <View>
@@ -187,11 +187,11 @@ function Post({ post }) {
         </View>
       );
     }
-
+ 
     return (
       <>
         <CommentSheet visible={showComments} setVisible={setShowComments} />
-
+ 
         <View
           style={{
             flexDirection: "row",
@@ -241,7 +241,7 @@ function Post({ post }) {
       </>
     );
   }
-
+ 
   return (
     <View
       style={{
@@ -253,14 +253,14 @@ function Post({ post }) {
       }}
     >
       <PostImage />
-
+ 
       <PostStats />
     </View>
   );
 }
-
+ 
 export default Post;
-
+ 
 const styles = StyleSheet.create({
   story: {
     width: 35,
@@ -273,3 +273,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+ 

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -27,3 +27,41 @@ export const auth =
         persistence: getReactNativePersistence(AsyncStorage),
       })
     : getAuth(app);
+
+// Firestore utility functions
+export const getPosts = async () => {
+  try {
+    const postsCollection = collection(firestore, "posts");
+    const snapshot = await getDocs(postsCollection);
+    const postsList = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    return postsList; // Return posts data
+  } catch (error) {
+    console.error("Error fetching posts: ", error);
+    throw error;
+  }
+};
+
+export const addPost = async (newPost) => {
+  try {
+    const postsCollection = collection(firestore, "posts");
+    const docRef = await addDoc(postsCollection, newPost);
+    console.log("Post added with ID: ", docRef.id);
+  } catch (error) {
+    console.error("Error adding post: ", error);
+    throw error;
+  }
+};
+
+export const deletePost = async (postId) => {
+  try {
+    const postDoc = doc(firestore, "posts", postId);
+    await deleteDoc(postDoc);
+    console.log("Post deleted with ID: ", postId);
+  } catch (error) {
+    console.error("Error deleting post: ", error);
+    throw error;
+  }
+};
