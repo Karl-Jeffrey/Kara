@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { GlobalStyles } from "../../../constants/Styles";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { firestore, storage } from "../../../firebase";
 import { getDownloadURL, ref } from "firebase/storage";
 import { useSharedValue } from "react-native-reanimated";
@@ -60,24 +60,11 @@ const Feed = ({ StoryTranslate, navigation }) => {
     fetchActivities();
   }, []);
 
-  const toggleLike = async (id, activity) => {
+  const toggleLike = (id) => {
     setLikedActivities((prevState) => ({
       ...prevState,
       [id]: !prevState[id],
     }));
-
-    try {
-      await addDoc(collection(firestore, "LikedPosts"), {
-        title: activity.title,
-        imagePath: activity.imagePath,
-        userId: "some-user-id", // Ideally, use user authentication ID
-        createdAt: new Date(),
-      });
-
-      console.log("Activity liked:", activity.title);
-    } catch (error) {
-      console.error("Error liking activity:", error.message);
-    }
   };
 
   const renderActivityItem = ({ item }) => {
@@ -87,11 +74,13 @@ const Feed = ({ StoryTranslate, navigation }) => {
       <View style={styles.card}>
         {/* Image Section */}
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: item.imageUrl }}
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
+          {item.imageUrl ? (
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={styles.cardImage}
+              resizeMode="cover"
+            />
+          ) : null}
           <LinearGradient
             colors={["rgba(0,0,0,0.5)", "transparent"]}
             start={{ x: 0, y: 1 }}
@@ -106,8 +95,7 @@ const Feed = ({ StoryTranslate, navigation }) => {
             <Text style={styles.title}>{item.title || "Activity Title"}</Text>
             <Text style={styles.price}>${item.price || "0.00"}</Text>
           </View>
-          {/* Like Button */}
-          <TouchableOpacity onPress={() => toggleLike(item.id, item)}>
+          <TouchableOpacity onPress={() => toggleLike(item.id)}>
             <Ionicons
               name={isLiked ? "heart" : "heart-outline"}
               size={24}
@@ -118,7 +106,29 @@ const Feed = ({ StoryTranslate, navigation }) => {
 
         {/* View Details Button */}
         <TouchableOpacity
-          onPress={() => navigation.navigate('PostDetailScreen', { activityId: item.id })}
+          onPress={() =>
+            navigation.navigate("PostDetailScreen", {
+              post: {
+                picturePath: "https://via.placeholder.com/600",
+                userPicturePath: "https://via.placeholder.com/100",
+                username: "John Doe",
+                createdAt: new Date(),
+                title: "Sample Activity Title",
+                tags: ["Outdoor", "Adventure"],
+                prices: { amount: "50" },
+                location: "Montreal, QC",
+                description:
+                  "This is a sample description for the activity. Come and enjoy a wonderful experience!",
+                likes: [],
+                comments: [],
+                socialMedia: {
+                  facebook: "https://facebook.com/sample",
+                  instagram: "https://instagram.com/sample",
+                  twitter: "https://twitter.com/sample",
+                },
+              },
+            })
+          }
           style={styles.viewDetailsButton}
         >
           <Text style={styles.viewDetailsText}>View Details</Text>
@@ -158,84 +168,65 @@ const Feed = ({ StoryTranslate, navigation }) => {
           renderItem={renderActivityItem}
         />
       ) : (
-        <View style={styles.noActivitiesContainer}>
-          <Text style={styles.noActivitiesText}>No activities available!</Text>
-        </View>
+        <Text style={styles.noActivitiesText}>No activities found.</Text>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  noActivitiesContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  noActivitiesText: {
-    color: "white",
-    fontSize: 18,
-  },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 15,
+    backgroundColor: "white",
+    borderRadius: 10,
     overflow: "hidden",
     marginHorizontal: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
   },
   imageContainer: {
     width: "100%",
-    aspectRatio: 16 / 9,
-    backgroundColor: GlobalStyles.colors.primary500,
+    height: 200,
   },
   cardImage: {
     width: "100%",
     height: "100%",
   },
   gradient: {
-    position: "absolute",
-    bottom: 0,
-    height: 50,
-    width: "100%",
+    ...StyleSheet.absoluteFillObject,
   },
   contentContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    padding: 15,
+    padding: 10,
   },
   textContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
+    color: GlobalStyles.colors.black,
   },
   price: {
-    fontSize: 16,
-    color: "#555",
+    fontSize: 14,
+    color: GlobalStyles.colors.green,
   },
   viewDetailsButton: {
-    backgroundColor: GlobalStyles.colors.primary500,
+    backgroundColor: GlobalStyles.colors.blue,
     padding: 10,
-    margin: 15,
-    borderRadius: 10,
     alignItems: "center",
   },
   viewDetailsText: {
-    color: "#fff",
-    fontSize: 16,
+    color: "white",
     fontWeight: "bold",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noActivitiesText: {
+    textAlign: "center",
+    fontSize: 16,
+    color: GlobalStyles.colors.gray,
   },
 });
 
