@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ImageBackground,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,8 +29,11 @@ const PostDetailScreen = () => {
     location: "Montreal, QC",
     description:
       "This is a sample description for the activity. Come and enjoy a wonderful experience!",
-    likes: [],
-    comments: [],
+    likes: [1, 2, 3], // Sample likes
+    comments: [
+      { user: "Jane", comment: "This looks fun!" },
+      { user: "Mike", comment: "Would love to join!" },
+    ], // Sample comments
     socialMedia: {
       facebook: "https://facebook.com/sample",
       instagram: "https://instagram.com/sample",
@@ -70,7 +74,7 @@ const PostDetailScreen = () => {
       </ImageBackground>
 
       {/* Post Content */}
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{post.title}</Text>
         <View style={styles.tagsContainer}>
           {post.tags.map((tag, index) => (
@@ -85,54 +89,112 @@ const PostDetailScreen = () => {
           {post.location}
         </Text>
         <Text style={styles.description}>{post.description}</Text>
-      </View>
 
-      {/* Save Button */}
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Ionicons
-          name={isFavorite ? "heart" : "heart-outline"}
-          size={20}
-          color="white"
-        />
-        <Text style={styles.saveButtonText}>
-          {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-        </Text>
-      </TouchableOpacity>
+        {/* Social Media Links */}
+        <View style={styles.socialMediaContainer}>
+          <TouchableOpacity onPress={() => navigation.navigate("WebView", { url: post.socialMedia.facebook })}>
+            <Ionicons name="logo-facebook" size={30} color={GlobalStyles.colors.blue} style={styles.socialIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("WebView", { url: post.socialMedia.instagram })}>
+            <Ionicons name="logo-instagram" size={30} color={GlobalStyles.colors.purpleDark} style={styles.socialIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("WebView", { url: post.socialMedia.twitter })}>
+            <Ionicons name="logo-twitter" size={30} color={GlobalStyles.colors.cyan} style={styles.socialIcon} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Likes and Comments */}
+        <View style={styles.likesCommentsContainer}>
+          <View style={styles.likesContainer}>
+            <Ionicons name="heart" size={20} color={GlobalStyles.colors.red} />
+            <Text style={styles.likesCount}>{post.likes.length} Likes</Text>
+          </View>
+          <View style={styles.commentsContainer}>
+            <Ionicons name="chatbox" size={20} color={GlobalStyles.colors.greenLight} />
+            <Text style={styles.commentsCount}>{post.comments.length} Comments</Text>
+          </View>
+        </View>
+
+        {/* Save Button */}
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={20}
+            color="white"
+          />
+          <Text style={styles.saveButtonText}>
+            {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "white" },
+  screen: { flex: 1, backgroundColor: GlobalStyles.colors.primary300 },
   imageBackground: { height: 300, justifyContent: "flex-end" },
   gradientOverlay: { height: "30%" },
-  headerInfo: { padding: 16 },
+  headerInfo: { padding: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   userAvatar: { width: 50, height: 50, borderRadius: 25 },
   username: { color: "white", fontWeight: "bold", fontSize: 16 },
   date: { color: "rgba(255,255,255,0.6)", fontSize: 12 },
-  content: { padding: 16 },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 8 },
+  content: { padding: 16, paddingBottom: 80 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 8, color: GlobalStyles.colors.primary100 },
   tagsContainer: { flexDirection: "row", marginBottom: 8 },
   tag: {
     backgroundColor: GlobalStyles.colors.primary200,
-    padding: 4,
-    borderRadius: 4,
+    padding: 6,
+    borderRadius: 6,
     marginRight: 8,
     color: "white",
+    fontSize: 14,
   },
-  price: { fontSize: 18, fontWeight: "bold", color: GlobalStyles.colors.green },
+  price: { fontSize: 20, fontWeight: "bold", color: GlobalStyles.colors.green, marginBottom: 10 },
   location: { fontSize: 16, color: GlobalStyles.colors.gray, marginVertical: 8 },
-  description: { fontSize: 16, color: GlobalStyles.colors.black, marginBottom: 16 },
+  description: { fontSize: 16, color: GlobalStyles.colors.black, marginBottom: 20 },
+  socialMediaContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginVertical: 15,
+  },
+  socialIcon: {
+    marginHorizontal: 20,
+  },
+  likesCommentsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 10,
+  },
+  likesContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  likesCount: {
+    marginLeft: 5,
+    fontSize: 16,
+    color: GlobalStyles.colors.primary100,
+  },
+  commentsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  commentsCount: {
+    marginLeft: 5,
+    fontSize: 16,
+    color: GlobalStyles.colors.primary100,
+  },
   saveButton: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: GlobalStyles.colors.primary,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    margin: 16,
+    marginBottom: 30,
   },
-  saveButtonText: { color: "white", marginLeft: 8 },
+  saveButtonText: { color: "white", marginLeft: 8, fontSize: 16 },
 });
 
 export default PostDetailScreen;

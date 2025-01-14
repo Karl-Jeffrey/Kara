@@ -17,22 +17,23 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { useSharedValue } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 
 const { width } = Dimensions.get("window");
 
-const Feed = ({ StoryTranslate, navigation }) => {
+const Feed = () => {
   const [activities, setActivities] = useState([]);
   const [likedActivities, setLikedActivities] = useState({});
   const [loading, setLoading] = useState(true);
   const lastScrollY = useSharedValue(0);
+  const navigation = useNavigation();  // Access navigation
 
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        // Use query with orderBy to fetch activities sorted by createdAt in descending order
         const activitiesQuery = query(
           collection(firestore, "activities"),
-          orderBy("createdAt", "desc") // Ensure activities are sorted by creation time
+          orderBy("createdAt", "desc")
         );
 
         const querySnapshot = await getDocs(activitiesQuery);
@@ -78,7 +79,6 @@ const Feed = ({ StoryTranslate, navigation }) => {
 
     return (
       <View style={styles.card}>
-        {/* Image Section */}
         <View style={styles.imageContainer}>
           {item.imageUrl ? (
             <Image
@@ -95,7 +95,6 @@ const Feed = ({ StoryTranslate, navigation }) => {
           />
         </View>
 
-        {/* Content Section */}
         <View style={styles.contentContainer}>
           <View style={styles.textContainer}>
             <Text style={styles.title}>{item.title || "Activity Title"}</Text>
@@ -110,31 +109,8 @@ const Feed = ({ StoryTranslate, navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* View Details Button */}
         <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("PostDetailScreen", {
-              post: {
-                picturePath: "https://via.placeholder.com/600",
-                userPicturePath: "https://via.placeholder.com/100",
-                username: "John Doe",
-                createdAt: new Date(),
-                title: "Sample Activity Title",
-                tags: ["Outdoor", "Adventure"],
-                prices: { amount: "50" },
-                location: "Montreal, QC",
-                description:
-                  "This is a sample description for the activity. Come and enjoy a wonderful experience!",
-                likes: [],
-                comments: [],
-                socialMedia: {
-                  facebook: "https://facebook.com/sample",
-                  instagram: "https://instagram.com/sample",
-                  twitter: "https://twitter.com/sample",
-                },
-              },
-            })
-          }
+          onPress={() => navigation.navigate("PostDetailScreen")}  // Using navigation here
           style={styles.viewDetailsButton}
         >
           <Text style={styles.viewDetailsText}>View Details</Text>

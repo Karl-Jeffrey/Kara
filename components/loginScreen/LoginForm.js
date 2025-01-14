@@ -6,7 +6,7 @@ import * as yup from "yup";
 import Validator from "email-validator";
 
 import Button from "../Button";
-import InputField from "../InputField";
+import InputField from "../InputField"; // Custom InputField component
 import { GlobalStyles } from "../../constants/Styles";
 import { AuthContext } from "../../store/auth-context";
 
@@ -64,6 +64,7 @@ const LoginForm = ({ navigation }) => {
               value={values.password}
               placeholder="Password"
               keyboardType="default"
+              secureTextEntry={true} // Add this line for password masking
               inValid={
                 values.password.length === 0 || values.password.length > 7
               }
@@ -86,7 +87,7 @@ const LoginForm = ({ navigation }) => {
               {/* TouchableOpacity for more control */}
               <TouchableOpacity
                 style={{
-                  backgroundColor:  GlobalStyles.colors.blue,
+                  backgroundColor: GlobalStyles.colors.blue,
                   paddingVertical: 12,
                   borderRadius: 6, // Square corners
                   justifyContent: "center",
