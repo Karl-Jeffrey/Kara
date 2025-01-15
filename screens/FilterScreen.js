@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,69 +6,72 @@ import {
   StyleSheet,
   ScrollView,
   Modal,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { GlobalStyles } from '../constants/Styles';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Import vector icons
+  Alert,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { GlobalStyles } from "../constants/Styles";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { firestore } from "../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 const categories = [
   {
-    title: 'Types of Activities',
-    icon: 'run-fast',
+    title: "Types of Activities",
+    icon: "run-fast",
     options: [
-      'Move & Groove: Sport, outdoor, dance, yoga, team sports',
-      'Art & Vibes: Exhibits, concerts, museums, shows, street art',
-      'Foodie Heaven: Local food, restaurants, tastings, food trucks',
-      'Let’s Hang: Festivals, markets, chill events',
-      'Fam Jam: Kid-friendly, family workshops, fun activities',
-      'Zen Zone: Meditation, spa, self-care, relaxation fitness',
-      'Night Owls: Bars, clubs, cinemas, karaoke, after dark',
+      "Move & Groove: Sport, outdoor, dance, yoga, team sports",
+      "Art & Vibes: Exhibits, concerts, museums, shows, street art",
+      "Foodie Heaven: Local food, restaurants, tastings, food trucks",
+      "Let’s Hang: Festivals, markets, chill events",
+      "Fam Jam: Kid-friendly, family workshops, fun activities",
+      "Zen Zone: Meditation, spa, self-care, relaxation fitness",
+      "Night Owls: Bars, clubs, cinemas, karaoke, after dark",
     ],
   },
   {
-    title: 'Budget',
-    icon: 'currency-usd',
+    title: "Budget",
+    icon: "currency-usd",
     options: [
-      'Ça coûte rien: Free activities',
-      'Petite dépense: $0 - $20',
-      'Balance ton budget: $20 - $50',
-      'Treat Yourself: $50+',
+      "Ça coûte rien: Free activities",
+      "Petite dépense: $0 - $20",
+      "Balance ton budget: $20 - $50",
+      "Treat Yourself: $50+",
     ],
   },
   {
-    title: 'Crew Size',
-    icon: 'account-group',
+    title: "Crew Size",
+    icon: "account-group",
     options: [
-      'Solo Flow: For one person',
-      'Duo Goals: Couples or pairs',
-      'Squad Time: Small group (3-6 people)',
-      'Big Crew Vibes: Large group (7+ people)',
+      "Solo Flow: For one person",
+      "Duo Goals: Couples or pairs",
+      "Squad Time: Small group (3-6 people)",
+      "Big Crew Vibes: Large group (7+ people)",
     ],
   },
   {
-    title: 'Spot (Location)',
-    icon: 'map-marker-radius',
+    title: "Spot (Location)",
+    icon: "map-marker-radius",
     options: [
-      'Near Me: Nearby activities',
-      'Hood Explorer: Specific neighborhoods',
-      'Next Stop: Neighboring regions or further',
+      "Near Me: Nearby activities",
+      "Hood Explorer: Specific neighborhoods",
+      "Next Stop: Neighboring regions or further",
     ],
   },
   {
-    title: 'Duration',
-    icon: 'clock-outline',
+    title: "Duration",
+    icon: "clock-outline",
     options: [
-      'Quickie: Less than 1 hour',
-      'Take Your Time: 1 to 3 hours',
-      'Half-Day Hustle: Half-day',
-      'Full Send: Full day',
+      "Quickie: Less than 1 hour",
+      "Take Your Time: 1 to 3 hours",
+      "Half-Day Hustle: Half-day",
+      "Full Send: Full day",
     ],
   },
   {
-    title: 'Hype Level (Popularity)',
-    icon: 'fire',
+    title: "Hype Level (Popularity)",
+    icon: "fire",
     options: [
-      'Trending Now: Most popular activities',
+      "Trending Now: Most popular activities",
       "Top Rated: Community's favorite activities",
     ],
   },
@@ -78,6 +81,7 @@ const FilterScreen = () => {
   const [selectedFilters, setSelectedFilters] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
+  const [filteredResults, setFilteredResults] = useState([]);
   const navigation = useNavigation();
 
   const handleTilePress = (category) => {
@@ -90,6 +94,42 @@ const FilterScreen = () => {
       ...prev,
       [categoryTitle]: prev[categoryTitle] === option ? null : option,
     }));
+  };
+
+  const handleApplyFilters = async () => {
+    try {
+      const filters = Object.entries(selectedFilters).filter(
+        ([_, value]) => value !== null
+      );
+
+      if (filters.length === 0) {
+        Alert.alert("No Filters Selected", "Please select at least one filter.");
+      }
+
+      const baseQuery = collection(firestore, "activities");
+      const filterQueries = filters.map(([key, value]) =>
+        where(key, "==", value)
+      );
+
+      const finalQuery = query(baseQuery, ...filterQueries);
+
+      const querySnapshot = await getDocs(finalQuery);
+      const results = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setFilteredResults(results);
+
+        Alert.alert("Success", `5 activities found.`);
+      
+    } catch (error) {
+      console.error("Error fetching filtered results:", error.message);
+      Alert.alert("Error", "Failed to fetch filtered activities.");
+    } finally {
+      // Navigate to the AppliedFilterScreen unconditionally
+      navigation.navigate('AppliedFilterScreen', { filteredResults });
+    }
   };
 
   const renderCategoryTile = (category) => (
@@ -145,18 +185,22 @@ const FilterScreen = () => {
         <View style={styles.tileContainer}>
           {categories.map(renderCategoryTile)}
         </View>
-        <Pressable
-          style={styles.applyButton}
-          onPress={() => {
-            console.log('Applied Filters:', selectedFilters);
-            navigation.goBack();
-          }}
-        >
+        <Pressable style={styles.applyButton} onPress={handleApplyFilters}>
           <Text style={styles.applyButtonText}>Apply Filters</Text>
         </Pressable>
+        {filteredResults.length > 0 && (
+          <View style={styles.resultsContainer}>
+            <Text style={styles.resultsHeader}>Filtered Results:</Text>
+            {filteredResults.map((result) => (
+              <View key={result.id} style={styles.resultItem}>
+                <Text style={styles.resultText}>{result.title}</Text>
+                <Text style={styles.resultText}>{result.description}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Modal for Subfilters */}
       <Modal
         transparent
         visible={modalVisible}
@@ -184,35 +228,35 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginBottom: 20,
   },
   tileContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   categoryTile: {
     backgroundColor: GlobalStyles.colors.primary500,
-    width: '48%',
+    width: "48%",
     padding: 16,
     marginVertical: 8,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   categoryTileText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "white",
+    textAlign: "center",
     marginTop: 8,
   },
   selectedOptionText: {
     fontSize: 12,
     color: GlobalStyles.colors.purple,
     marginTop: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   iconStyle: {
     marginBottom: 8,
@@ -221,32 +265,50 @@ const styles = StyleSheet.create({
     backgroundColor: GlobalStyles.colors.blue,
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   applyButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+  },
+  resultsContainer: {
+    marginTop: 20,
+  },
+  resultsHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 10,
+  },
+  resultItem: {
+    padding: 10,
+    backgroundColor: GlobalStyles.colors.primary200,
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  resultText: {
+    color: "white",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
     backgroundColor: GlobalStyles.colors.primary200,
     padding: 20,
     borderRadius: 12,
-    width: '90%',
+    width: "90%",
   },
   modalTitle: {
     fontSize: 20,
     color: GlobalStyles.colors.purple,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   filterOption: {
     backgroundColor: GlobalStyles.colors.primary500,
@@ -258,8 +320,8 @@ const styles = StyleSheet.create({
     backgroundColor: GlobalStyles.colors.purple,
   },
   filterOptionText: {
-    color: 'white',
-    textAlign: 'center',
+    color: "white",
+    textAlign: "center",
     fontSize: 16,
   },
   closeModalButton: {
@@ -267,11 +329,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginTop: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   closeModalText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

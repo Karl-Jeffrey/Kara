@@ -32,6 +32,7 @@ import FilterScreen from "./screens/FilterScreen";
 import PostDetailScreen from "./screens/PostDetailScreen";
 import CreateActivityScreen from "./screens/CreateActivityScreen";
 import BusinessInfoScreen from "./screens/BusinessInfoScreen";
+import AppliedFilterScreen from "./screens/AppliedFilterScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -126,6 +127,7 @@ export const SignedInStack = () => {
           <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
           <Stack.Screen name="ViewStoryScreen" component={ViewStoryScreen} />
           <Stack.Screen name="PostDetailScreen" component={PostDetailScreen} />
+          <Stack.Screen name="AppliedFilterScreen" component={AppliedFilterScreen} />
           <Stack.Screen
             name="CreateActivityScreen"
             component={CreateActivityScreen}

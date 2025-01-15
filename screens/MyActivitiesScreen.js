@@ -9,35 +9,64 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { GlobalStyles } from "../constants/Styles"; // Import GlobalStyles
-
+import { collection, getDocs } from "firebase/firestore";
+import { firestore, storage } from "../firebase"; // Import Firestore and Storage instances
+import { getDownloadURL, ref } from "firebase/storage";
+ 
 function MyActivities() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Simuler la récupération des activités publiées par l'utilisateur
+ 
+  // Fetch activities from Firestore and resolve image URLs
   useEffect(() => {
-    setTimeout(() => {
-      setActivities([
-        { id: "1", title: "GoKart", imageUrl: "https://www.lehighvalleygrandprix.com/wp-content/uploads/2018/02/Go_Kart_Speed-1.jpg" },
-        { id: "2", title: "Tennis", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/9/94/2013_Australian_Open_-_Guillaume_Rufin.jpg" },
-        { id: "3", title: "Painting", imageUrl: "https://www.kunstloft.com/wordpress/en_UK/eu/wp-content/uploads/2023/07/Painter-with-landscape-painting.jpg" },
-        { id: "4", title: "Library", imageUrl: "https://visitorinvictoria.ca/wp-content/uploads/2016/09/ranurte-a-CnhYgTenY-unsplash.jpg" },
-        { id: "5", title: "Parc", imageUrl: "https://www.villevillemarie.org/wp-content/uploads/2023/06/Parc-des-Clubs_01-scaled.jpeg" },
-        { id: "6", title: "Discothèque", imageUrl: "https://www.capdagde.com/app/uploads/2022/10/AdobeStock-discotheque-1198x800.jpeg" },
-        { id: "7", title: "MiniGolf", imageUrl: "https://bigkahunas.com/destin/wp-content/uploads/sites/11/2023/11/Big-Kahunas-Destin-Water-Park-226.jpg" },
-        { id: "8", title: "Karaoke", imageUrl: "https://www.ivazio.com/wp-content/uploads/2022/08/karaoke-3-chanteurs-1-2560x1920.jpg" },
-        { id: "9", title: "VR", imageUrl: "https://www.levelupreality.ca/wp-content/uploads/2024/09/Couple-Playing-Escape-Simulator.webp" },
-      ]);
-      setLoading(false);
-    }, 2000); // Simule un délai d'appel API
+    const fetchActivities = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(firestore, "activities"));
+ 
+        const activitiesData = await Promise.all(
+          querySnapshot.docs.map(async (doc) => {
+            const data = doc.data();
+ 
+            // Resolve the image URL from Firebase Storage
+            let imageUrl = null;
+            if (data.imagePath) {
+              const imageRef = ref(storage, data.imagePath);
+              imageUrl = await getDownloadURL(imageRef);
+            }
+ 
+            return {
+              id: doc.id,
+              ...data,
+              imageUrl, // Add the resolved image URL
+            };
+          })
+        );
+ 
+        setActivities(activitiesData);
+      } catch (error) {
+        console.error("Error fetching activities:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+ 
+    fetchActivities();
   }, []);
-
+ 
+  // Render each activity card
   const renderActivity = ({ item }) => (
     <TouchableOpacity style={styles.card}>
-      <Image source={{ uri: item.imageUrl }} style={styles.image} />
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.image} />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.imagePlaceholderText}>No Image</Text>
+        </View>
+      )}
+      <Text style={styles.title}>{item.title}</Text>
     </TouchableOpacity>
   );
-
+ 
   return (
     <View style={styles.container}>
       {loading ? (
@@ -49,7 +78,7 @@ function MyActivities() {
           data={activities}
           renderItem={renderActivity}
           keyExtractor={(item) => item.id}
-          numColumns={3} // 3 cartes par ligne
+          numColumns={3} // Display 3 cards per row
           columnWrapperStyle={styles.columnWrapper}
         />
       ) : (
@@ -60,7 +89,7 @@ function MyActivities() {
     </View>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -80,11 +109,30 @@ const styles = StyleSheet.create({
     height: 150,
     overflow: "hidden",
     elevation: 3,
+    alignItems: "center",
   },
   image: {
     width: "100%",
-    height: "100%",
+    height: "70%",
     borderRadius: 8,
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: "70%",
+    backgroundColor: GlobalStyles.colors.gray,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagePlaceholderText: {
+    color: "white",
+    fontSize: 14,
+  },
+  title: {
+    marginTop: 5,
+    color: GlobalStyles.colors.primary,
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
   },
   columnWrapper: {
     justifyContent: "space-between",
@@ -99,5 +147,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
-
+ 
 export default MyActivities;
+ 
+ 

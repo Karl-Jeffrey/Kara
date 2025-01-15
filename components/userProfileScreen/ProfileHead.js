@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,46 +7,82 @@ import {
   ImageBackground,
   Pressable,
   Animated,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { GlobalStyles, DEFAULT_DP } from "../../constants/Styles.js";
 import PressEffect from "../UI/PressEffect.js";
-
-const ProfileHead = ({ userData, viewMode, scrollY }) => {
-  const [profilePic, setProfilePic] = React.useState(
-    !!userData.picturePath ? userData.picturePath : DEFAULT_DP
-  );
+import { firestore } from "../../firebase";
+import { doc, getDoc } from "firebase/firestore";
+ 
+const ProfileHead = ({ userId, viewMode, scrollY }) => {
+  const [profilePic, setProfilePic] = useState(DEFAULT_DP); // Default profile picture
+  const [fullName, setFullName] = useState("Anonymous");
+  const [username, setUsername] = useState("anonymous");
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
-
-  // Function to render the profile stats
-  function ProfileStat({ text, subText, onPress }) {
-    return (
-      <Pressable style={{ alignItems: "center" }} onPress={onPress}>
-        <Text style={{ fontWeight: "400", fontSize: 25, color: "white" }}>
-          {text}
-        </Text>
-        <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
-          {subText}
-        </Text>
-      </Pressable>
-    );
-  }
-
-  // Header transform animation based on scrollY
+ 
+  // Log the userId received as a prop
+  console.log("ProfileHead received userId:", userId);
+ 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userId) {
+        console.warn("Error: User ID is not provided to ProfileHead.");
+        setLoading(false); // Stop the loader
+        return;
+      }
+ 
+      try {
+        console.log("Fetching data for userId:", userId);
+        const userDoc = await getDoc(doc(firestore, "users", userId));
+ 
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          console.log("Fetched user data:", userData);
+ 
+          // Set the user data in the component state
+          setFullName(userData.fullName || "Anonymous");
+          setUsername(userData.username || "anonymous");
+          setProfilePic(userData.profilePicture || DEFAULT_DP);
+        } else {
+          console.error(`User with ID ${userId} does not exist in Firestore.`);
+          setFullName("Unknown User");
+          setUsername("unknown");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error.message);
+        setFullName("Error Loading");
+        setUsername("error");
+      } finally {
+        setLoading(false);
+      }
+    };
+ 
+    fetchUserData();
+  }, [userId]);
+ 
+  const ProfileStat = ({ text, subText, onPress }) => (
+    <Pressable style={{ alignItems: "center" }} onPress={onPress}>
+      <Text style={{ fontWeight: "400", fontSize: 25, color: "white" }}>{text}</Text>
+      <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{subText}</Text>
+    </Pressable>
+  );
+ 
   const headerStyle = {
     transform: [
       {
         translateY: scrollY
           ? scrollY.interpolate({
-              inputRange: [0, 200], // Scroll range
-              outputRange: [0, -60], // Move the header up by -60px
-              extrapolate: "clamp", // Prevent the header from moving too far
+              inputRange: [0, 200],
+              outputRange: [0, -60],
+              extrapolate: "clamp",
             })
-          : 0, // Fallback in case scrollY is undefined
+          : 0,
       },
     ],
   };
-
+ 
   return (
     <Animated.View style={[styles.animatedHeader, headerStyle]}>
       <View style={{ alignItems: "center", margin: 10 }}>
@@ -55,7 +91,6 @@ const ProfileHead = ({ userData, viewMode, scrollY }) => {
           imageStyle={{ borderRadius: 100 }}
           source={{ uri: profilePic }}
         >
-          {/* Edit / Add Friend Button */}
           <View style={styles.editButtonContainer}>
             <PressEffect style={styles.editButton}>
               <Pressable
@@ -74,15 +109,10 @@ const ProfileHead = ({ userData, viewMode, scrollY }) => {
               </Pressable>
             </PressEffect>
           </View>
-          {/* Chat Button for View Mode */}
           {viewMode && (
             <View style={styles.chatButtonContainer}>
               <PressEffect>
-                <Pressable
-                  onPress={() => {
-                    navigation.navigate("MessagesScreen");
-                  }}
-                >
+                <Pressable onPress={() => navigation.navigate("MessagesScreen")}>
                   <Image
                     source={require("../../assets/chat-focused.png")}
                     style={styles.chatIcon}
@@ -92,23 +122,27 @@ const ProfileHead = ({ userData, viewMode, scrollY }) => {
             </View>
           )}
         </ImageBackground>
-        {/* User Name */}
-        <Text style={styles.fullName}>{userData.fullName}</Text>
-        <Text style={styles.username}>@{userData.username}</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color={GlobalStyles.colors.primary300} />
+        ) : (
+          <>
+            <Text style={styles.fullName}>{fullName}</Text>
+            <Text style={styles.username}>@{username}</Text>
+          </>
+        )}
       </View>
-
-      {/* Profile Stats */}
+ 
       <View style={styles.statsContainer}>
-        <ProfileStat text={"255"} subText={"Posts"} />
-        <ProfileStat text={"14.6k"} subText={"Followers"} />
-        <ProfileStat text={"378"} subText={"Followings"} />
+        <ProfileStat text={"2"} subText={"Posts"} />
+        <ProfileStat text={"0"} subText={"Followers"} />
+        <ProfileStat text={"0"} subText={"Followings"} />
       </View>
     </Animated.View>
   );
 };
-
+ 
 export default ProfileHead;
-
+ 
 const styles = StyleSheet.create({
   animatedHeader: {
     backgroundColor: "transparent",
@@ -164,3 +198,5 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
 });
+ 
+ 

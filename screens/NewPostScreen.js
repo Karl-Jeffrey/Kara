@@ -9,6 +9,7 @@ import {
   Image,
   Text,
   ScrollView,
+  Alert,
 } from "react-native";
 import { GlobalStyles } from "../constants/Styles";
 import Button from "../components/Button";
@@ -19,18 +20,18 @@ import ProgressOverlay from "../components/ProgressOverlay";
 import ErrorOverlay from "../components/ErrorOverlay";
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
+import { firestore } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const { width, height } = Dimensions.get("window");
 
 function NewPostScreen({ navigation }) {
   const authCtx = useContext(AuthContext);
-  const [type, setType] = useState();
   const [post, setPost] = useState(null);
   const [caption, setCaption] = useState("");
   const [hashtags, setHashtags] = useState("");
   const [location, setLocation] = useState("");
   const [privacy, setPrivacy] = useState("public");
-  const [audio, setAudio] = useState(null);
   const [uploading, setUploading] = useState({
     status: false,
     progress: 0,
@@ -38,50 +39,45 @@ function NewPostScreen({ navigation }) {
   });
 
   const newPostHandler = useCallback(async () => {
-    if (post) {
-      const formData = new FormData();
-      formData.append("userId", authCtx.userData._id);
-      formData.append("description", caption);
-      formData.append("hashtags", hashtags);
-      formData.append("location", location);
-      formData.append("privacy", privacy);
-      if (audio) {
-        formData.append("audio", {
-          uri: audio.uri,
-          type: audio.type,
-          name: audio.fileName,
-        });
-      }
-      formData.append("picture", {
-        uri: post.uri,
-        type: post.type,
-        name: post.fileName,
-      });
-
-      try {
-        setUploading((prevData) => ({
-          ...prevData,
-          status: true,
-        }));
-
-        setTimeout(() => {
-          setUploading({ status: false, progress: 0, success: true });
-          navigation.goBack();
-        }, 3000);
-      } catch (error) {
-        setUploading((prevData) => ({
-          ...prevData,
-          success: false,
-        }));
-        console.log(error.message);
-      }
+    if (!post || !caption.trim()) {
+      Alert.alert("Error", "Please upload an image and provide a caption.");
+      return;
     }
-  }, [authCtx.userData._id, caption, hashtags, location, privacy, audio, post, navigation]);
+
+    try {
+      setUploading((prevData) => ({ ...prevData, status: true }));
+
+      const postData = {
+        userId: authCtx.userData._id, // User ID from AuthContext
+        content: caption,
+        hashtags,
+        location,
+        privacy,
+        imageUrl: post.uri, // Image URI
+        likesCount: 0,
+        commentsCount: 0,
+        createdAt: serverTimestamp(), // Firestore server timestamp
+      };
+
+      // Save the post data to Firestore
+      const docRef = await addDoc(collection(firestore, "posts"), postData);
+
+      console.log("Post added with ID:", docRef.id);
+      setUploading({ status: false, progress: 0, success: true });
+
+      Alert.alert("Success", "Your post has been uploaded!");
+      navigation.goBack();
+    } catch (error) {
+      setUploading((prevData) => ({ ...prevData, success: false }));
+      console.error("Error creating post:", error.message);
+      Alert.alert("Error", "Failed to upload your post. Please try again.");
+    }
+  }, [authCtx.userData._id, caption, hashtags, location, privacy, post, navigation]);
 
   const openImagePicker = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (permissionResult.granted === false) {
         alert("Permission to access camera roll is required!");
         return;
@@ -94,17 +90,12 @@ function NewPostScreen({ navigation }) {
         quality: 1,
       });
 
-      console.log("Full picker result:", result);
-      
       if (!result.canceled) {
-        // In newer versions of expo-image-picker, the image URI is in result.assets[0]
         const imageUri = result.assets ? result.assets[0].uri : result.uri;
-        console.log("Image URI:", imageUri);
-        
         setPost({
           uri: imageUri,
-          type: 'image/jpeg',
-          fileName: 'photo.jpg'
+          type: "image/jpeg",
+          fileName: "photo.jpg",
         });
       }
     } catch (error) {
@@ -116,7 +107,7 @@ function NewPostScreen({ navigation }) {
   const openCamera = async () => {
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-      
+
       if (permissionResult.granted === false) {
         alert("Permission to access camera is required!");
         return;
@@ -128,16 +119,12 @@ function NewPostScreen({ navigation }) {
         quality: 1,
       });
 
-      console.log("Camera result:", result);
-
       if (!result.canceled) {
         const imageUri = result.assets ? result.assets[0].uri : result.uri;
-        console.log("Camera image URI:", imageUri);
-        
         setPost({
           uri: imageUri,
-          type: 'image/jpeg',
-          fileName: 'photo.jpg'
+          type: "image/jpeg",
+          fileName: "photo.jpg",
         });
       }
     } catch (error) {
@@ -176,13 +163,11 @@ function NewPostScreen({ navigation }) {
       ) : (
         <ScrollView style={styles.scrollContainer}>
           <View style={styles.previewContainer}>
-            {/* Image Container */}
             <View style={styles.imageContainer}>
               <Image
                 source={{ uri: post.uri }}
                 style={styles.imagePreview}
                 resizeMode="contain"
-                onError={(error) => console.log("Image loading error:", error)}
               />
               <Pressable
                 style={styles.resizeButton}
@@ -191,8 +176,6 @@ function NewPostScreen({ navigation }) {
                 <Ionicons name="close-outline" size={30} color="white" />
               </Pressable>
             </View>
-
-            {/* Input Fields Container */}
             <View style={styles.inputContainer}>
               <InputField
                 placeholder="What's on your mind?"
@@ -210,75 +193,17 @@ function NewPostScreen({ navigation }) {
                 onChangeText={setLocation}
                 value={location}
               />
-
-              <View style={styles.privacyContainer}>
-                <Text style={styles.privacyLabel}>Privacy:</Text>
-                <Pressable onPress={() => setPrivacy("public")}>
-                  <Text
-                    style={[
-                      styles.privacyOption,
-                      privacy === "public" && styles.activePrivacy,
-                    ]}
-                  >
-                    Public
-                  </Text>
-                </Pressable>
-                <Pressable onPress={() => setPrivacy("private")}>
-                  <Text
-                    style={[
-                      styles.privacyOption,
-                      privacy === "private" && styles.activePrivacy,
-                    ]}
-                  >
-                    Private
-                  </Text>
-                </Pressable>
-                <Pressable onPress={() => setPrivacy("draft")}>
-                  <Text
-                    style={[
-                      styles.privacyOption,
-                      privacy === "draft" && styles.activePrivacy,
-                    ]}
-                  >
-                    Draft
-                  </Text>
-                </Pressable>
-              </View>
-
-              <View style={styles.audioContainer}>
-                <Button
-                  title="Choose Audio"
-                  onPress={() => {
-                    /* Logic for choosing audio */
-                  }}
-                />
-              </View>
             </View>
           </View>
-
           <View style={styles.postButtonContainer}>
             <Button title="Post" onPress={newPostHandler} />
           </View>
         </ScrollView>
       )}
-
-      {uploading.status && (
-        <>
-          {uploading.success ? (
-            <ProgressOverlay title={"Uploading"} progress={uploading.progress} />
-          ) : (
-            <ErrorOverlay
-              message={"Uploading Failed"}
-              onClose={() =>
-                setUploading({ status: false, progress: 0, success: true })
-              }
-            />
-          )}
-        </>
-      )}
     </KeyboardAvoidingView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
