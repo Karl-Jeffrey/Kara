@@ -17,16 +17,16 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { useSharedValue } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation } from "@react-navigation/native"; // Import useNavigation
 
 const { width } = Dimensions.get("window");
 
-const Feed = () => {
+const Feed = ({ StoryTranslate = { value: 0 } }) => {
   const [activities, setActivities] = useState([]);
   const [likedActivities, setLikedActivities] = useState({});
   const [loading, setLoading] = useState(true);
   const lastScrollY = useSharedValue(0);
-  const navigation = useNavigation();  // Access navigation
+  const navigation = useNavigation(); // Access navigation
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -110,7 +110,7 @@ const Feed = () => {
         </View>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate("PostDetailScreen")}  // Using navigation here
+          onPress={() => navigation.navigate("PostDetailScreen")} // Using navigation here
           style={styles.viewDetailsButton}
         >
           <Text style={styles.viewDetailsText}>View Details</Text>
